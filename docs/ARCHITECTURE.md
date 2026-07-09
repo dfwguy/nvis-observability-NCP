@@ -137,7 +137,7 @@ healthy). Rack/tray BMC inventory lives in gitignored `nvlmapper/config.yml`
 
 ## 5. Dashboards (`platform/grafana/dashboards/`, `docs/DASHBOARD_INVENTORY.md`)
 
-22 curated, generalized dashboards auto-provision into the **NVIS** Grafana
+21 curated, generalized dashboards auto-provision into the **NVIS** Grafana
 folder on boot (file provider, reloaded every 30 s). Highlights:
 
 - **Job-centric** (the differentiators): `nvis-job-health` (L1 wallboard),
