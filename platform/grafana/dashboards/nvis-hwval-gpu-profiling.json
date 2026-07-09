@@ -1,0 +1,2480 @@
+{
+  "title": "DGX SuperPOD - GPU Profiling",
+  "uid": "nvis-hwval-gpu-profiling",
+  "description": "Per-component GPU temperature / power / clock profiling for the DGX SuperPOD fleet (thousands of GPUs). All-fleet line charts are replaced with topk outlier views and 'hottest / highest' offender tables so spikes and over-threshold components are immediately visible. Throttle bitmask is decoded to words. XID / NVLink events come from Loki. The DCGM / node_exporter / UFM panels remain; the Redfish/BMC exporter is now LIVE (574 BMCs) and out-of-band per-GPU component temps & power are wired in the 'Redfish / BMC' row.",
+  "tags": [
+    "nvis",
+    "gpu",
+    "dcgm",
+    "temperature",
+    "power",
+    "throttle",
+    "hwval"
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "editable": true,
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data Source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "name": "cluster",
+        "label": "Cluster",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP, cluster)",
+          "refId": "VariableQuery"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0,
+        "allValue": ".+",
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP, cluster)"
+      },
+      {
+        "name": "dgx_flavor",
+        "label": "DGX Flavor",
+        "type": "custom",
+        "query": "DGX SuperPOD",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      },
+      {
+        "name": "node",
+        "label": "Node",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}, node)",
+          "refId": "VariableQuery"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "search",
+        "type": "textbox",
+        "label": "Log search (regex, case-insensitive)",
+        "description": "Free-text filter for the XID / NVLink Loki panel. Examples: Xid | nvlink | ECC | fell off the bus",
+        "current": {
+          "text": "",
+          "value": "",
+          "selected": false
+        },
+        "query": "",
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "GPU Chip Temperature — outliers + hottest chips (DCGM_FI_DEV_GPU_TEMP)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "GPU Chip Temp °C — top 20 hottest (spikes / outliers only)",
+      "description": "Per-GPU chip temperature across the fleet is ~2300 series and unreadable. This shows only the 20 hottest GPUs so temperature spikes stand out.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "min": 0,
+          "max": 110,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 65
+              },
+              {
+                "color": "red",
+                "value": 75
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", node=~\"$node\"} < 150)",
+          "legendFormat": "{{node}} / gpu{{gpu}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Hottest GPU chips ≥ 60 °C (empty = healthy)",
+      "description": "Instant list of every GPU chip at or above 60 °C, sorted hottest first. Empty table means no chip is running hot.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "°C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 65
+                    },
+                    {
+                      "color": "red",
+                      "value": 75
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "°C",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Hostname": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "UUID": true
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "modelName": 2,
+              "pci_bus_id": 3,
+              "Value": 4
+            },
+            "renameByName": {
+              "modelName": "model",
+              "Value": "°C"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "°C",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 60
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", node=~\"$node\"} < 150",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "GPU Memory (HBM) Temperature — outliers + hottest modules (DCGM_FI_DEV_MEMORY_TEMP)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "GPU Memory (HBM) Temp °C — top 20 hottest",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "min": 0,
+          "max": 110,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\", node=~\"$node\"} < 150)",
+          "legendFormat": "{{node}} / gpu{{gpu}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Hottest HBM modules ≥ 60 °C (empty = healthy)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "°C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 70
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "°C",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Hostname": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "UUID": true
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "modelName": 2,
+              "pci_bus_id": 3,
+              "Value": 4
+            },
+            "renameByName": {
+              "modelName": "model",
+              "Value": "°C"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "°C",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 60
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_MEMORY_TEMP{cluster=~\"$cluster\", node=~\"$node\"} < 150",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "GPU Power — total + outliers + highest draw (DCGM_FI_DEV_POWER_USAGE)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Total fleet GPU power (current)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", node=~\"$node\"})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "GPU Power (W) — top 20 highest draw",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 28
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1200
+              },
+              {
+                "color": "red",
+                "value": 1400
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", node=~\"$node\"})",
+          "legendFormat": "{{node}} / gpu{{gpu}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "type": "table",
+      "title": "Highest-power GPUs ≥ 1000 W (empty = none near limit)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Watts"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1200
+                    },
+                    {
+                      "color": "red",
+                      "value": 1400
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Watts",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Hostname": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "UUID": true
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "modelName": 2,
+              "pci_bus_id": 3,
+              "Value": 4
+            },
+            "renameByName": {
+              "modelName": "model",
+              "Value": "Watts"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "Watts",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1000
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", node=~\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "row",
+      "title": "Clocks — SM / MEM outliers (DCGM_FI_DEV_SM_CLOCK / MEM_CLOCK)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      }
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "SM Clock (MHz) — top 20 highest",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rothz",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_SM_CLOCK{cluster=~\"$cluster\", node=~\"$node\"} * 1000000)",
+          "legendFormat": "{{node}} / gpu{{gpu}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "type": "timeseries",
+      "title": "Memory Clock (MHz) — top 20 highest",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rothz",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_MEM_CLOCK{cluster=~\"$cluster\", node=~\"$node\"} * 1000000)",
+          "legendFormat": "{{node}} / gpu{{gpu}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "type": "row",
+      "title": "Throttling & Violations — decoded (DCGM_FI_DEV_CLOCK_THROTTLE_REASONS bitmask)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      }
+    },
+    {
+      "id": 41,
+      "type": "stat",
+      "title": "GPUs actively throttling (real reasons only)",
+      "description": "Count of GPUs with a GENUINE fault throttle bit set (HW Slowdown 8, SW Thermal 32, HW Thermal 64, HW Power Brake 128 = mask 232). GPU Idle(1), App Clocks(2), SW Power Cap(4) and Sync Boost(16) are EXCLUDED — they are normal operation, not faults.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 49
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 232) > 0) or vector(0)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "type": "table",
+      "title": "Active throttle reasons per GPU — decoded (empty = no real throttling)",
+      "description": "Each column is a throttle reason decoded from the bitmask; 1 = active. Only GPUs with at least one real throttle bit are listed. Idle (1) / App Clocks (2) are ignored.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 18,
+        "x": 6,
+        "y": 49
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "basic"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "",
+                  "index": 0
+                }
+              }
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "HW Thermal Slowdown",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Hostname": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "UUID": true,
+              "modelName": true,
+              "pci_bus_id": true
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "Value #F": 7
+            },
+            "renameByName": {
+              "Value #A": "HW Thermal Slowdown",
+              "Value #B": "HW Power Brake",
+              "Value #C": "SW Thermal",
+              "Value #D": "HW Slowdown",
+              "Value #E": "SW Power Cap (impacting)",
+              "Value #F": "Sync Boost"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "HW Thermal Slowdown",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "fieldName": "HW Power Brake",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "fieldName": "SW Thermal",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "fieldName": "HW Slowdown",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "fieldName": "SW Power Cap (impacting)",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "fieldName": "Sync Boost",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "clamp_max(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 64), 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "clamp_max(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 128), 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "clamp_max(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 32), 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "clamp_max(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 8), 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "clamp_max((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 4)) and on(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\"}[5m]) > 0) and on(node, gpu) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} > 50), 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "clamp_max(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\", node=~\"$node\"}, 16), 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "type": "table",
+      "title": "Thermal / Power violation counters > 0 (µs throttled, empty = healthy)",
+      "description": "GPUs that have accumulated thermal or power violation time. Value is DCGM's violation counter (microseconds spent below requested clocks).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 61
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "violation_us"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "µs"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 1000000
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "violation_us",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Hostname": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "UUID": true,
+              "modelName": true
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "kind": 2,
+              "pci_bus_id": 3,
+              "Value": 4
+            },
+            "renameByName": {
+              "__name__": "kind",
+              "Value": "violation_us"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "violation_us",
+                "config": {
+                  "id": "greater",
+                  "options": {
+                    "value": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_THERMAL_VIOLATION{cluster=~\"$cluster\", node=~\"$node\"} or DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\", node=~\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "type": "row",
+      "title": "Interconnect — NVLink bandwidth outliers + PCIe replay errors",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      }
+    },
+    {
+      "id": 51,
+      "type": "timeseries",
+      "title": "NVLink Bandwidth (total) — top 20 (DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 73
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "KiBs",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL{cluster=~\"$cluster\", node=~\"$node\"})",
+          "legendFormat": "{{node}} / gpu{{gpu}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "type": "table",
+      "title": "PCIe replay counter > 0 (empty = healthy)",
+      "description": "GPUs reporting PCIe replays — a sign of a marginal PCIe link.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 73
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "replays"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "replays",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "Hostname": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "device": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "UUID": true,
+              "modelName": true
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "pci_bus_id": 2,
+              "Value": 3
+            },
+            "renameByName": {
+              "Value": "replays"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "replays",
+                "config": {
+                  "id": "greater",
+                  "options": {
+                    "value": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\", node=~\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "type": "row",
+      "title": "Node board / component temps (node_exporter hwmon)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 82
+      }
+    },
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "Node hwmon sensors °C — top 20 hottest",
+      "description": "Board / NIC / component temperatures reported by node_exporter (node_hwmon_temp_celsius). ~26k series fleet-wide — only the 20 hottest are shown.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 83
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 65
+              },
+              {
+                "color": "red",
+                "value": 75
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, node_hwmon_temp_celsius{cluster=~\"$cluster\", node=~\"$node\"} < 150)",
+          "legendFormat": "{{node}} / {{chip}} / {{sensor}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "type": "table",
+      "title": "Hottest node sensors ≥ 60 °C (empty = healthy)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 83
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "°C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 65
+                    },
+                    {
+                      "color": "red",
+                      "value": 75
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "°C",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "replica": true
+            },
+            "indexByName": {
+              "node": 0,
+              "chip": 1,
+              "sensor": 2,
+              "Value": 3
+            },
+            "renameByName": {
+              "Value": "°C"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "°C",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 60
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_hwmon_temp_celsius{cluster=~\"$cluster\", node=~\"$node\"} < 150",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 70,
+      "type": "row",
+      "title": "NVLink / IB Switch temps (UFM)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 93
+      }
+    },
+    {
+      "id": 71,
+      "type": "table",
+      "title": "Switch temperatures °C — hottest first (ufm_switch_temperature_celsius)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 94
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "°C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "°C",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "type": true,
+              "guid": true
+            },
+            "indexByName": {
+              "switch": 0,
+              "role": 1,
+              "Value": 2
+            },
+            "renameByName": {
+              "Value": "°C"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "ufm_switch_temperature_celsius{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 80,
+      "type": "row",
+      "title": "XID / NVLink error events (Loki — there is no DCGM XID metric)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 104
+      }
+    },
+    {
+      "id": 81,
+      "type": "logs",
+      "title": "XID / NVLink error log events",
+      "description": "XID and NVLink error events come from logs, not DCGM. Default filter matches xid|nvlink; add extra terms in the Log search box.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 105
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\"} |~ \"(?i)(xid|nvlink)\" |~ \"(?i)${search:raw}\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 900,
+      "type": "row",
+      "title": "Redfish / BMC per-GPU component temps & power (out-of-band, 574 BMCs — LIVE)",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 119
+      }
+    },
+    {
+      "id": 901,
+      "type": "timeseries",
+      "title": "BMC GPU/HBM sensor temp °C — top 20 hottest (redfish_temperature_celsius, HGX_GPU*)",
+      "description": "Out-of-band GPU/HBM temps from the BMC (Redfish). Bad-sensor sentinel readings filtered with < 150.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 120
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "max": 110,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 65
+              },
+              {
+                "color": "red",
+                "value": 75
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, redfish_temperature_celsius{cluster=~\"$cluster\", node=~\"$node\", sensor=~\"HGX_GPU.*\"} < 150)",
+          "legendFormat": "{{node}} / {{sensor}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 902,
+      "type": "table",
+      "title": "BMC GPU sensors ≥ 65 °C (empty = healthy)",
+      "description": "Every BMC-reported GPU/HBM sensor at or above 65 °C.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 120
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "°C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 65
+                    },
+                    {
+                      "color": "red",
+                      "value": 75
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "°C",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "bmc": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "serial": true,
+              "uuid": true,
+              "manufacturer": true,
+              "model": true,
+              "power_state": true,
+              "component": true,
+              "fan": true,
+              "status": true,
+              "severity": true
+            },
+            "indexByName": {
+              "node": 0,
+              "sensor": 1,
+              "°C": 2
+            },
+            "renameByName": {
+              "Value": "°C"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "any",
+            "filters": [
+              {
+                "fieldName": "°C",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 65
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "redfish_temperature_celsius{cluster=~\"$cluster\", node=~\"$node\", sensor=~\"HGX_GPU.*\"} < 150",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 903,
+      "type": "timeseries",
+      "title": "BMC GPU component power W — top 20 (redfish_component_power_watts, HGX GPU *)",
+      "description": "Per-GPU package power reported out-of-band by the BMC.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 0,
+        "y": 130
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1.5,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1200
+              },
+              {
+                "color": "red",
+                "value": 1400
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, redfish_component_power_watts{cluster=~\"$cluster\", node=~\"$node\", component=~\"HGX.?GPU.?[0-9].?Power.?[0-9]?\"})",
+          "legendFormat": "{{node}} / {{component}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 904,
+      "type": "table",
+      "title": "Highest BMC GPU component power — top 40",
+      "description": "Top 40 GPU component power draws reported by the BMC.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 130
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Watts"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1200
+                    },
+                    {
+                      "color": "red",
+                      "value": 1400
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Watts",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "bmc": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "instance": true,
+              "job": true,
+              "replica": true,
+              "serial": true,
+              "uuid": true,
+              "manufacturer": true,
+              "model": true,
+              "power_state": true,
+              "sensor": true,
+              "fan": true,
+              "status": true,
+              "severity": true
+            },
+            "indexByName": {
+              "node": 0,
+              "component": 1,
+              "Watts": 2
+            },
+            "renameByName": {
+              "Value": "Watts"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(40, redfish_component_power_watts{cluster=~\"$cluster\", node=~\"$node\", component=~\"HGX.?GPU.?[0-9].?Power.?[0-9]?\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Back to NVIS Home",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "Hardware Validation Home",
+      "url": "/d/nvis-hwval-home",
+      "type": "link",
+      "icon": "home",
+      "tags": [],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": false,
+      "targetBlank": false,
+      "tooltip": "Back to NVIS Hardware Validation Home"
+    }
+  ],
+  "id": null
+}

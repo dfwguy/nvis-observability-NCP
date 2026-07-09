@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored — NEVER commit real creds.
+grafana_url         = "http://OBSVM_HOST:3000"
+grafana_auth        = "admin:CHANGE_ME"          # or "Bearer <service-account-token>"
+victoriametrics_url = "http://OBSVM_HOST:8428"
+prometheus_url      = "http://OBSVM_HOST:9090"
+loki_url            = "http://OBSVM_HOST:3100"
+folder_title        = "NVIS Observability"

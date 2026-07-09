@@ -1,0 +1,10 @@
+# NVIS node inventory — one node hostname (or user-resolvable name) per line.
+# Copy to nodes.txt and edit. Blank lines and # comments are ignored.
+# rollout.sh reaches each of these over SSH (optionally via SSH_JUMP).
+#
+# Prefer NODE_DISCOVERY_CMD (e.g. `sinfo -h -N -o %N`) on large clusters so the
+# inventory stays in sync with the scheduler instead of a static list.
+
+node001
+node002
+node003

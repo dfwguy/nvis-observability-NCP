@@ -1,0 +1,1196 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Landing / KPI beacon + navigation hub for the InfiniBand observability suite.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-net-home/nvis-network-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Network Observability Home",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "type": "dashboards",
+      "title": "Network Boards",
+      "tags": [
+        "network"
+      ],
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "title": "Fabric KPI Beacon (LIVE)",
+      "type": "row"
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "title": "Fabric Healthy",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "CRIT",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "HEALTHY",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "🩺 Fabric Overview & scorecard",
+              "url": "/d/nvis-ib-overview/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ufm_fabric_healthy{cluster=~\"$cluster\"} or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "LIVE (UFM). ufm_fabric_healthy: 1=HEALTHY / 0=CRIT for the managed fabric."
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "title": "Switches Down",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔎 Switch grid",
+              "url": "/d/nvis-ib-switches/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(ufm_switch_up{cluster=~\"$cluster\"}==0) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "title": "Links Active %",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 90
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "🔎 Bad/slow/degraded links",
+              "url": "/d/nvis-ib-offenders/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "100*count(node_infiniband_state_id{cluster=~\"$cluster\"}==4)/clamp_min(count(node_infiniband_state_id{cluster=~\"$cluster\"}),1)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "LIVE. % of live IB host rails (HCA ports, SU1+SU2) in ACTIVE state (node_infiniband_state_id==4). UFM ufm_link_active_count is unpopulated (always 0) and is NOT used."
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "title": "Active Alarms",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔎 Switch grid (alarm/state)",
+              "url": "/d/nvis-ib-switches/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ufm_alarms_total{cluster=~\"$cluster\"} or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 6,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "title": "Flaps 1h",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔎 Link flaps",
+              "url": "/d/nvis-ib-flaps/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(node_infiniband_link_downed_total{cluster=~\"$cluster\"}[1h])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 7,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "title": "Ports Not LinkUp",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔎 Signal / ports",
+              "url": "/d/nvis-ib-signal/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "🔎 Bad/slow/degraded links",
+              "url": "/d/nvis-ib-offenders/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(node_infiniband_physical_state_id{cluster=~\"$cluster\"} != 5) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 8,
+      "title": "Cabling / Audit KPIs (LIVE — cable + audit collectors)",
+      "type": "row"
+    },
+    {
+      "type": "stat",
+      "id": 9,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 6
+      },
+      "title": "Cable Issues (open)",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔌 Cabling worklist",
+              "url": "/d/nvis-ib-cabling/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(ib_cable_issue{cluster=~\"$cluster\",su=~\"SU1|SU2\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "LIVE. Open cable issues on the LIVE fabric (SU1+SU2). Scoped to live SUs because ib_cable_issue also enumerates planned SU3-SU9 (no live telemetry). Full-build audit lives on D8 Cabling."
+    },
+    {
+      "type": "stat",
+      "id": 10,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 6
+      },
+      "title": "Hostname Mismatches",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔎 Switch grid",
+              "url": "/d/nvis-ib-switches/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ib_switch_hostname_mismatch_total{cluster=~\"$cluster\"}",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "LIVE. ib_switch_hostname_mismatch_total from the ib-switch-audit exporter (0 = healthy)."
+    },
+    {
+      "type": "stat",
+      "id": 11,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 6
+      },
+      "title": "Switches w/ Cable Issues",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "links": [
+            {
+              "title": "🔌 Cabling worklist",
+              "url": "/d/nvis-ib-cabling/?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(count by(node)(ib_cable_issue{cluster=~\"$cluster\",su=~\"SU1|SU2\"}))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "LIVE. Distinct LIVE-fabric switches (SU1+SU2) with >=1 open cable issue. Scoped to live SUs (excludes planned SU3-SU9). Drill to D8 Cabling."
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 19,
+      "title": "⏳ Pending — LLDP-IB UMAD scan (P2) & UFM Telemetry (P3)",
+      "type": "row",
+      "panels": [
+        {
+          "type": "stat",
+          "id": 12,
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 11
+          },
+          "title": "Fabric Health Score",
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 70
+                  },
+                  {
+                    "color": "green",
+                    "value": 90
+                  }
+                ]
+              },
+              "unit": "short",
+              "noValue": "⏳ Waiting: LLDP-IB UMAD scan (P2)"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "ibl_fabric_health_score{cluster=~\"$cluster\"}",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "description": "NEW-IBL (pending ib-lldp ibl_* exporter — design Appendix B)"
+        },
+        {
+          "type": "stat",
+          "id": 13,
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 11
+          },
+          "title": "Worst eff-BER",
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1e-12
+                  },
+                  {
+                    "color": "red",
+                    "value": 1e-09
+                  }
+                ]
+              },
+              "unit": "sci",
+              "noValue": "⏳ Waiting: UFM Telemetry (P3)"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "max(eff_ber{cluster=~\"$cluster\"})",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "description": "NEW-TELEM (switch-side — pending UFM Telemetry P3)"
+        },
+        {
+          "type": "stat",
+          "id": 14,
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 11
+          },
+          "title": "SM Redundancy",
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "CRIT",
+                      "color": "red"
+                    },
+                    "1": {
+                      "text": "HEALTHY",
+                      "color": "green"
+                    }
+                  }
+                }
+              ],
+              "noValue": "⏳ Waiting: LLDP-IB UMAD scan (P2)"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "ibl_sm_has_redundancy{cluster=~\"$cluster\"}",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "description": "NEW-IBL (pending ib-lldp ibl_* exporter — design Appendix B)"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 15,
+      "title": "Navigation",
+      "type": "row"
+    },
+    {
+      "type": "text",
+      "id": 16,
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "title": "IB Observability Suite — Jump To",
+      "options": {
+        "mode": "html",
+        "content": "\n<style>\n.nvis-nav{display:flex;flex-wrap:wrap;gap:8px}\n.nvis-nav a{display:block;padding:10px 14px;border-radius:6px;background:#22252b;color:#e0e0e0;\ntext-decoration:none;font-weight:600;border:1px solid #33373d;min-width:150px}\n.nvis-nav a:hover{background:#2d3138;border-color:#5794f2}\n.nvis-grp{font-size:11px;text-transform:uppercase;color:#8e9297;margin:10px 0 4px}\n</style>\n<div class=\"nvis-grp\">Overview</div>\n<div class=\"nvis-nav\">\n<a href=\"/d/nvis-ib-overview/?var-cluster=cluster\">D1 · Fabric Overview</a>\n<a href=\"/d/nvis-ib-switches/?var-cluster=cluster\">D2 · Switch Grid</a>\n</div>\n<div class=\"nvis-grp\">Signal &amp; Errors</div>\n<div class=\"nvis-nav\">\n<a href=\"/d/nvis-ib-signal/?var-cluster=cluster\">D3 · BER / Signal</a>\n<a href=\"/d/nvis-ib-flaps/?var-cluster=cluster\">D4 · Link Flaps</a>\n<a href=\"/d/nvis-ib-drops/?var-cluster=cluster\">D5 · Drops &amp; Discards</a>\n<a href=\"/d/nvis-ib-congestion/?var-cluster=cluster\">D6 · Congestion</a>\n</div>\n<div class=\"nvis-grp\">Triage &amp; Cabling</div>\n<div class=\"nvis-nav\">\n<a href=\"/d/nvis-ib-offenders/?var-cluster=cluster\">D7 · Bad/Slow/Degraded</a>\n<a href=\"/d/nvis-ib-cabling/?var-cluster=cluster\">D8 · Miswiring Worklist</a>\n<a href=\"/d/nvis-ib-sm-pkey/?var-cluster=cluster\">D11 · SM / PKey</a>\n</div>\n<div class=\"nvis-grp\">Topology &amp; Impact</div>\n<div class=\"nvis-nav\">\n<a href=\"/d/nvis-ib-blast-radius/?var-cluster=cluster\">D12 · Blast Radius</a>\n<a href=\"/d/nvis-ib-topology-live/?var-cluster=cluster\">D13 · Live Topology</a>\n</div>\n"
+      },
+      "datasource": null
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 17,
+      "title": "Cable-Issue Worklist (LIVE)",
+      "type": "row"
+    },
+    {
+      "type": "table",
+      "id": 18,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "title": "Top Switches by Cable Issues",
+      "description": "LIVE. Per-switch open cable-issue count on the LIVE fabric (SU1+SU2). Row links: 'Cabling worklist' -> D8 (cluster-scoped; D8 does not filter by switch); 'Blast radius' -> D12 scoped to the selected switch (leaf KPIs) / spine fan-out.",
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Issues",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto"
+          },
+          "noValue": "✓ None — fabric cabling clean"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Issues"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 20
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Switch"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔌 Cabling worklist",
+                    "url": "/d/nvis-ib-cabling/?var-cluster=$cluster&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "💥 Blast radius (this switch)",
+                    "url": "/d/nvis-ib-blast-radius/?var-cluster=$cluster&var-switch=${__data.fields.Switch}&var-leaf=${__data.fields.Switch}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "dgx_flavor": true,
+              "cluster": true,
+              "fabric": true,
+              "endpoint": true,
+              "container": true,
+              "namespace": true,
+              "pod": true,
+              "service": true
+            },
+            "renameByName": {
+              "switch": "Switch",
+              "su": "SU",
+              "rack": "Rack",
+              "role": "Role",
+              "Value": "Issues"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "topk(25, ib_cable_issue_by_switch{cluster=~\"$cluster\",su=~\"SU1|SU2\"} * on(switch) group_left(rack,role) label_replace(ib_switch_info, \"switch\", \"$1\", \"system_name\", \"(.*)\"))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "network",
+    "infiniband",
+    "home"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource",
+        "label": "Datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "loki",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource",
+        "label": "Loki"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(node_infiniband_state_id, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(node_infiniband_state_id, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ""
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "query": "SU1,SU2,SU3,SU4,SU5,SU6,SU7,SU8,SU9",
+        "options": [],
+        "type": "custom",
+        "allValue": ".+",
+        "description": "Falls back to custom list until ib_switch_info(su) collector lands."
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(ufm_switch_up{cluster=~\"$cluster\"}, switch)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Switch (GUID)",
+        "multi": true,
+        "name": "switch",
+        "options": [],
+        "query": {
+          "query": "label_values(ufm_switch_up{cluster=~\"$cluster\"}, switch)",
+          "refId": "SwitchQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(node_infiniband_info{cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(node_infiniband_info{cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Severity",
+        "multi": true,
+        "name": "severity",
+        "query": "crit,warn,ok",
+        "options": [],
+        "type": "custom",
+        "allValue": ".+"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "NVIS Network — IB Observability Home",
+  "uid": "nvis-net-home",
+  "version": 2
+}

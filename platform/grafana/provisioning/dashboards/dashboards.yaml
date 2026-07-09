@@ -1,0 +1,19 @@
+# =============================================================================
+# Grafana dashboard file-provider.
+# Loads every *.json under /etc/grafana/dashboards (bind-mounted from
+# ./grafana/dashboards) into the "NVIS" folder. The dashboards component drops
+# its JSON there; sub-folders become Grafana folders.
+# =============================================================================
+apiVersion: 1
+
+providers:
+  - name: nvis-dashboards
+    orgId: 1
+    folder: NVIS
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: true

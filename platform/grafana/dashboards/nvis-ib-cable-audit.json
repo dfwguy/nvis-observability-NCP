@@ -1,0 +1,1240 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Run-over-run IB cabling audit (LIVE). Compares the newest cable-issue scan against the previous 12h scan to show which miscablings are NEW and which are FIXED, plus freshness of the last scan. Fed by the ib-cable-issue exporter (:gb301) diff metrics: ib_cable_audit_*, ib_cable_issue_{current,new,resolved}_total, ib_cable_issue_change; reuses ib_cable_issue_by_switch. Baseline until the second 12h scan completes (compare_available=0).",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-net-home/nvis-network-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Network Observability Home",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "type": "link",
+      "title": "🔌 Miswiring Worklist",
+      "url": "/d/nvis-ib-cabling?${__url_time_range}",
+      "icon": "external link",
+      "tooltip": "Full expected-vs-actual re-patch worklist",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "type": "dashboards",
+      "title": "Network Boards",
+      "tags": [
+        "network"
+      ],
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "type": "text",
+      "id": 1,
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "title": "Read me — run-over-run cabling audit",
+      "options": {
+        "mode": "markdown",
+        "content": "### Cabling Audit (live) — are the miscablings getting fixed?\nThe scan runs on a **12h cron** and each run is **compared with the previous run**. **NEW** = faults that appeared since the last scan; **FIXED / RESOLVED** = faults that are gone since the last scan. Stable key = `(node, source_port, issue, expected_neighbor, discovered_neighbor)` over the four miswiring categories.\n\n⏱ **Freshness** below trips red at **13h** (12h cron + 1h grace). If it reads **NO SCAN**, the exporter has no snapshot loaded.\n\n⚠ **Baseline note:** on first deploy only one snapshot exists → **compare_available = 0** and NEW/RESOLVED read *no prior scan*. The **first** 12h scan re-establishes current; the **second** scan yields the first real NEW/FIXED numbers — that is when \"most of the cabling issues might have been fixed\" gets answered."
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "title": "Audit Freshness [LIVE]",
+      "type": "row"
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "title": "Audit Age (since last scan)",
+      "description": "now − last scan timestamp, computed live in the exporter (ib_cable_audit_age_seconds). Green < 12h, yellow ≥ 12h, red ≥ 13h (12h cron + 1h grace). -1 / no series = NO SCAN loaded.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 43200
+              },
+              {
+                "color": "red",
+                "value": 46800
+              }
+            ]
+          },
+          "unit": "s",
+          "noValue": "NO SCAN",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "NO SCAN",
+                  "color": "red",
+                  "index": 0
+                }
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "NO SCAN",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ib_cable_audit_age_seconds",
+          "legendFormat": "age",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "title": "Last Scan",
+      "description": "Wall-clock time of the newest cable-issue scan (ib_cable_audit_timestamp_seconds). 0 / no series = NO SCAN.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "unit": "dateTimeFromNow",
+          "noValue": "NO SCAN",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "NO SCAN",
+                  "color": "red",
+                  "index": 0
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ib_cable_audit_timestamp_seconds * 1000",
+          "legendFormat": "last scan",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "title": "Compare Available",
+      "description": "1 = a previous snapshot was diffable, so NEW/RESOLVED are real. 0 = baseline (only one scan present); NEW/RESOLVED read as no-prior-scan until the second 12h run (ib_cable_audit_compare_available).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "yellow",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "NO PRIOR SCAN",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "NO PRIOR SCAN",
+                  "index": 0
+                },
+                "1": {
+                  "text": "COMPARE LIVE",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ib_cable_audit_compare_available",
+          "legendFormat": "compare",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 6,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "title": "Change Detail",
+      "description": "0 = full per-item change detail emitted. 1 = per-item ib_cable_issue_change series were capped (>2000 changes in one run — e.g. a scan-methodology swing); totals still valid (ib_cable_audit_change_suppressed).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "—",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "FULL DETAIL",
+                  "index": 0
+                },
+                "1": {
+                  "text": "SUPPRESSED (cap hit)",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ib_cable_audit_change_suppressed",
+          "legendFormat": "suppressed",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 7,
+      "title": "Since Last Audit — run-over-run [LIVE]",
+      "type": "row"
+    },
+    {
+      "type": "stat",
+      "id": 8,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 12
+      },
+      "title": "NEW since last audit",
+      "description": "Miswiring faults that appeared since the previous scan (cur − prev). Guarded by compare_available; reads 'no prior scan' until the second 12h run.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "no prior scan",
+          "links": [
+            {
+              "title": "🔎 Which items? → Changed items table",
+              "url": "/d/nvis-ib-cable-audit?viewPanel=18&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(ib_cable_issue_new_total) and on() (ib_cable_audit_compare_available == 1)",
+          "legendFormat": "new",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 9,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 12
+      },
+      "title": "RESOLVED since last audit",
+      "description": "Miswiring faults that are gone since the previous scan (prev − cur) — the 'fixed' count. Guarded by compare_available.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "no prior scan",
+          "links": [
+            {
+              "title": "🔎 Which items? → Changed items table",
+              "url": "/d/nvis-ib-cable-audit?viewPanel=18&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(ib_cable_issue_resolved_total) and on() (ib_cable_audit_compare_available == 1)",
+          "legendFormat": "resolved",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 10,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 12
+      },
+      "title": "NET change",
+      "description": "NEW − RESOLVED. Positive (red) = miscablings growing; zero or negative (green) = fixes are outpacing new faults. Guarded by compare_available.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "no prior scan"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(sum(ib_cable_issue_new_total) - sum(ib_cable_issue_resolved_total)) and on() (ib_cable_audit_compare_available == 1)",
+          "legendFormat": "net",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 11,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 12
+      },
+      "title": "Current open (total)",
+      "description": "Total open miswiring faults in the newest scan (sum of ib_cable_issue_current_total across su/issue).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "✓ 0 — none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(ib_cable_issue_by_switch{fabric=\"EW\"})",
+          "legendFormat": "current",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 12,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "title": "Are we winning? — current total vs per-run NEW / RESOLVED",
+      "description": "Each 12h step: the current-total line should trend DOWN if fixes outpace new miscablings. NEW and RESOLVED bars show the per-run delta.",
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "last",
+            "max"
+          ]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "pointSize": 6,
+            "showPoints": "auto",
+            "spanNulls": true,
+            "axisPlacement": "auto"
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "current total"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "new this run"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "resolved this run"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "sum(ib_cable_issue_by_switch{fabric=\"EW\"})",
+          "legendFormat": "current total",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(ib_cable_issue_new_total)",
+          "legendFormat": "new this run",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(ib_cable_issue_resolved_total)",
+          "legendFormat": "resolved this run",
+          "refId": "C"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 13,
+      "title": "Current Cabling State [LIVE]",
+      "type": "row"
+    },
+    {
+      "type": "bargauge",
+      "id": 14,
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "title": "Worst switches by cable issues — topk(20) [LIVE]",
+      "description": "Current open cable-issue count per switch (ib_cable_issue_by_switch, fabric EW). leaf-switch tops it (123 Wrong-neighbor + 22 Extra-cable = 145).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10,
+        "namePlacement": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "✓ None — fabric cabled clean",
+          "links": [
+            {
+              "title": "🔎 Blast radius (D12)",
+              "url": "/d/nvis-ib-blast-radius/blast-radius?var-switch=${__field.labels.switch}&var-leaf=${__field.labels.switch}&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "topk(20, ib_cable_issue_by_switch{fabric=\"EW\"})",
+          "legendFormat": "{{switch}} ({{su}})",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "bargauge",
+      "id": 15,
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 12,
+        "y": 26
+      },
+      "title": "Current open by SU [LIVE]",
+      "description": "Per-SU current miswiring totals (sum by su of ib_cable_issue_current_total).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10,
+        "namePlacement": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "✓ 0 — none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum by (su) (ib_cable_issue_by_switch{fabric=\"EW\"})",
+          "legendFormat": "{{su}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "barchart",
+      "id": 16,
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 18,
+        "y": 26
+      },
+      "title": "Net change by SU — NEW (up) vs RESOLVED (down) [LIVE]",
+      "description": "Per-SU run-over-run delta: NEW drawn upward (red), RESOLVED drawn downward (green). Bars below zero = SUs where miscablings are being fixed.",
+      "options": {
+        "orientation": "auto",
+        "stacking": "normal",
+        "showValue": "auto",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "axisPlacement": "auto"
+          },
+          "unit": "short",
+          "noValue": "no prior scan"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NEW"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RESOLVED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "sum by (su) (ib_cable_issue_new_total)",
+          "legendFormat": "NEW",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "-sum by (su) (ib_cable_issue_resolved_total)",
+          "legendFormat": "RESOLVED",
+          "refId": "B",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 17,
+      "title": "Changed Items Since Last Audit [LIVE]",
+      "type": "row"
+    },
+    {
+      "type": "table",
+      "id": 18,
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "title": "Changed items — NEW / RESOLVED ports (ib_cable_issue_change)",
+      "description": "One row per changed port since the previous scan. change=new (red) appeared this run; change=resolved (green) is fixed. Empty until the second 12h scan (or if per-item detail was suppressed by the cardinality cap).",
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "change",
+            "desc": true
+          },
+          {
+            "displayName": "su",
+            "desc": false
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "noValue": "no changes since last scan (or baseline / suppressed)"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Switch"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Blast radius (D12)",
+                    "url": "/d/nvis-ib-blast-radius/blast-radius?var-switch=${__data.fields.node}&var-leaf=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "su"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SU"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "source_port"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Source port"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "issue"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Issue"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "expected_neighbor"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Expected neighbor"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "discovered_neighbor"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Discovered neighbor"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "change"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Change"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "new": {
+                        "text": "NEW",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "resolved": {
+                        "text": "RESOLVED",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "cluster": true,
+              "fabric": true,
+              "Value": true
+            },
+            "indexByName": {
+              "change": 0,
+              "su": 1,
+              "node": 2,
+              "source_port": 3,
+              "issue": 4,
+              "expected_neighbor": 5,
+              "discovered_neighbor": 6
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "ib_cable_issue_change",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "network",
+    "infiniband",
+    "cabling",
+    "audit"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource",
+        "label": "Datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "InfiniBand — Cabling Audit (live)",
+  "uid": "nvis-ib-cable-audit",
+  "version": 1
+}

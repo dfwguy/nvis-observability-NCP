@@ -1,0 +1,21 @@
+# NVLMapper — never commit rendered site config, secrets, the vendor binary, or sweep output.
+
+# Rendered site config (contains tray BMC IPs and may contain creds). Template stays tracked.
+config.yml
+config.yaml
+config.local.yml
+
+# Vendor-supplied NVLMapper binary — NOT distributed with this repo.
+bin/
+*.bin
+
+# Sweep output / parsed midfiles produced at runtime.
+output/
+*.prom
+midfile__acp_down_connections.txt
+# ...but keep the synthetic parser test fixture tracked.
+!test-samples/**/midfile__acp_down_connections.txt
+
+# Python bytecode
+__pycache__/
+*.pyc

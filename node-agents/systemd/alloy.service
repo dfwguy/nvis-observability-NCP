@@ -1,0 +1,16 @@
+[Unit]
+# Reference unit. install-node.sh renders the canonical copy with HOSTNAME and
+# NVIS_CLUSTER filled in. %H expands to the node hostname; set NVIS_CLUSTER to
+# your CLUSTER_NAME.
+Description=Grafana Alloy (NVIS)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Environment=HOSTNAME=%H
+Environment=NVIS_CLUSTER=cluster
+ExecStart=/usr/bin/alloy run /etc/alloy/config.alloy --storage.path=/var/lib/alloy/data --server.http.listen-addr=127.0.0.1:12345
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target

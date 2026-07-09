@@ -1,0 +1,14 @@
+# Generated cable-audit scanner outputs (site data — never commit)
+cable-audit/data/cable-issue_*.csv
+cable-audit/data/cable-issue-delta_*.csv
+cable-audit/data/cable_audit.prom
+cable-audit/fixtures/reconstructed-from-baseline.json
+
+# Generated ib-identity build artifacts (rebuilt at runtime)
+ib-identity/metrics.prom
+ib-identity/alias.json
+ib-identity/blast-index.json
+
+# Python bytecode
+__pycache__/
+*.pyc

@@ -1,0 +1,1005 @@
+{
+  "uid": "nvis-job-fabric-corr",
+  "title": "Job ⇄ Fabric Correlation",
+  "description": "Given a Slurm JobID, correlate its GPU-power trace with the IB-fabric health of the exact SU fabric / rails that job used. Answers 'was this slow run the fabric's fault?'.",
+  "tags": [
+    "nvis",
+    "job",
+    "fabric",
+    "network",
+    "correlation"
+  ],
+  "editable": true,
+  "graphTooltip": 1,
+  "fiscalYearStartMonth": 0,
+  "timezone": "",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}",
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0
+      },
+      {
+        "name": "loki_datasource",
+        "type": "datasource",
+        "query": "loki",
+        "current": {
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0
+      },
+      {
+        "name": "cluster",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "cv"
+        },
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "hide": 0,
+        "options": []
+      },
+      {
+        "name": "JobID",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(slurm_job_info{cluster=~\"$cluster\"}, jobid)",
+          "refId": "jv"
+        },
+        "refresh": 2,
+        "sort": 3,
+        "hide": 0,
+        "description": "Slurm job to analyze"
+      },
+      {
+        "name": "job_nodes",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(slurm_job_node{cluster=~\"$cluster\",jobid=\"$JobID\"}, node)",
+          "refId": "nv"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "hide": 2,
+        "current": {}
+      },
+      {
+        "name": "job_sus",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(ib_node_placement{cluster=~\"$cluster\",node=~\"$job_nodes\"}, su)",
+          "refId": "sv"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "hide": 2,
+        "current": {}
+      },
+      {
+        "name": "job_switches",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(ib_switch_info{cluster=~\"$cluster\",su=~\"$job_sus\"}, system_name)",
+          "refId": "wv"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "hide": 2,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Job scope",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "title": "Job",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Slurm accounting for the selected job.",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 10,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "slurm_job_info{cluster=~\"$cluster\",jobid=~\"$JobID\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "dgx_flavor": true,
+              "cluster": true,
+              "Value": true
+            },
+            "renameByName": {
+              "jobid": "Job",
+              "user": "User",
+              "state": "State",
+              "partition": "Partition",
+              "nnodes": "Nodes",
+              "ncpus": "CPUs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Nodes",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 10,
+        "y": 1,
+        "w": 3,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(slurm_job_node{cluster=~\"$cluster\",jobid=~\"$JobID\"}) or vector(0)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "title": "SU(s) occupied",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 13,
+        "y": 1,
+        "w": 3,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(su)(ib_node_placement{cluster=~\"$cluster\",node=~\"$job_nodes\"})) or vector(0)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Switches on path (SU fabric)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ib_switch_info{cluster=~\"$cluster\",su=~\"$job_sus\"}) or vector(0)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "refId": "E"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Elapsed",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(slurm_job_elapsed_seconds{cluster=~\"$cluster\",jobid=~\"$JobID\"}) or vector(0)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "refId": "F"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Training progress ⇄ fabric health  (GPU power = 2nd-res proxy; fabric = ~78s cadence)",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 8,
+      "title": "GPU power on job nodes  vs  fabric disturbance on job's SU fabric",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Left axis = GPU power on the job's nodes (NCCL comm-stalls show as power dips). Right axis = fabric disturbance on the job's SU fabric: link-down/discard RATE (reset-robust) + the reliable degraded-port gauge. If IB is the cause, power dips align with these. Counter TOTALS are intentionally avoided (increase()-over-reset inflates).",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$job_nodes\"})",
+          "legendFormat": "GPU power avg (W)",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "min(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$job_nodes\"})",
+          "legendFormat": "GPU power min (W)  ← stalls dip",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(LinkDownedCounterExtended{cluster=~\"$cluster\",switch=~\"$job_switches\"}[$__rate_interval]))",
+          "legendFormat": "link-down rate (/s)",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(PortXmitDiscardsExtended{cluster=~\"$cluster\",switch=~\"$job_switches\"}[$__rate_interval]))",
+          "legendFormat": "xmit discards /s",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ib:node:port_slow{cluster=~\"$cluster\",switch=~\"$job_switches\"} == 1) or vector(0)",
+          "legendFormat": "degraded ports on path",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "H"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "axisPlacement": "left"
+          },
+          "unit": "watt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*(link-down|discards|degraded).*"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "fabric disturbance"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    6,
+                    4
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom",
+          "displayMode": "table",
+          "calcs": [
+            "min",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Fabric health on the job's SU fabric",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 10,
+      "title": "Degraded / slow ports on path",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Active ports not at XDR (speed!=XDR) on the job's SU switches — degraded uplinks.",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 4,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ib:node:port_slow{cluster=~\"$cluster\",switch=~\"$job_switches\"} == 1) or vector(0)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "refId": "J"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Slow-port detail (switch/port/speed/width)",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "✓ empty = every active port on the job's path is at full XDR rate.",
+      "gridPos": {
+        "x": 4,
+        "y": 18,
+        "w": 10,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "ib:node:port_slow{cluster=~\"$cluster\",switch=~\"$job_switches\"} == 1",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "refId": "K"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "dgx_flavor": true,
+              "cluster": true,
+              "Value": true,
+              "port_guid": true,
+              "guid": true,
+              "node_description": true
+            },
+            "renameByName": {
+              "switch": "Switch",
+              "port": "Port",
+              "speed": "Speed",
+              "width": "Width",
+              "tier": "Tier"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Symbol-error rate — top ports on path",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 14,
+        "y": 18,
+        "w": 10,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, sum by(switch,port)(rate(SymbolErrorCounterExtended{cluster=~\"$cluster\",switch=~\"$job_switches\"}[$__rate_interval])))",
+          "legendFormat": "{{switch}}:{{port}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "L"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 13,
+      "title": "Congestion — transmit-wait rate by switch",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Credit-starvation proxy: transmit-wait accumulation = congestion on the job's fabric.",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by(switch)(rate(PortXmitWaitExtended{cluster=~\"$cluster\",switch=~\"$job_switches\"}[$__rate_interval]))",
+          "legendFormat": "{{switch}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "refId": "M"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 14,
+      "title": "Link-down disturbance by port (peak rate in window)",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Each flap = an NCCL stall. Non-empty on the job's path is the smoking gun. Peak-rate (not range-total) so an exporter restart can't fake events.",
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(20, max_over_time((sum by(switch,port)(rate(LinkDownedCounterExtended{cluster=~\"$cluster\",switch=~\"$job_switches\"}[5m])))[$__range:5m]))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "refId": "N"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "switch": "Switch",
+              "port": "Port",
+              "Value": "Peak link-down rate (/s)"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "field": "Peak link-down rate (/s)",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "This job's exact rails (node ↔ switch ↔ port bridge)",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 16,
+      "title": "Per-rail cabling + peak symbol-error rate (this job's nodes)",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Every rail (GPU→leaf:port) this job used, with its peak symbol-error rate. 0 across the board ⇒ the job's own rails were clean (e.g. job 417: slow but clean).",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max_over_time((sum by(node,switch,port,hca)(rate(SymbolErrorCounterExtended{cluster=~\"$cluster\"}[5m]) * on(switch,port) group_left(node,hca) node_ib_link{cluster=~\"$cluster\",node=~\"$job_nodes\"}))[$__range:5m])",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "refId": "P"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "node": "GPU node",
+              "switch": "Leaf switch",
+              "port": "Port",
+              "hca": "HCA",
+              "Value": "Peak symbol-err rate (/s)"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "field": "Peak symbol-err rate (/s)",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "How to read this board",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 18,
+      "title": "Scope & caveats",
+      "type": "text",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 24,
+        "h": 6
+      },
+      "targets": [],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Scope** — panels are scoped to **all switches in the SU(s) the job occupies** (`$job_switches`), because a collective traverses the whole SU CLOS (leaf **and** spine tiers). The bottom table is the job's *exact* rails via the `node_ib_link` bridge (node→leaf:port).\n\n**Reliable signal = the degraded-port gauge** (`ib:node:port_slow==1`, red tiles). Error-counter **totals are deliberately NOT shown**: `increase()` over a long range inflates across an exporter/UFM counter reset (the retracted '5.9M symbol errors' was exactly this artifact). Link-down and discard panels use **`rate()` / peak-rate**, which correct for resets per-interval.\n\n**Resolution** — fabric counters are **minute-cadence** (UFM ~78 s) → fabric *health/cause*, not per-second step jitter. GPU **power** (top panel) is the 2nd-resolution training-progress proxy (NCCL comm-stalls dip power while util stays ~100%). *True per-collective step time* is not yet collected — recommend piloting the **NCCL Inspector profiler exporter** (`nccl_collective_exec_time_microseconds{slurm_job_id,node}`, 30 s cadence) for the primary slowness axis.\n\n**Reading it — the regression test:** **job 417** ran SLOW (66 s/step, worst jitter) yet its fabric was **CLEAN** (zero link-down/symbol/discard on its SU1 rails). *Error counters ≠ steady slowness.* If this board renders 417 as fabric-error-heavy, it has re-created the `increase()` artifact and is WRONG. A genuinely fabric-hurt run shows power dips aligned with link-down/discard **rate** bursts + degraded ports on *its* path. Flat fabric + slow job ⇒ look elsewhere (data pipeline, checkpoint I/O, a straggler GPU). Other SUs' errors are **not** shown, by design."
+      }
+    }
+  ],
+  "id": null
+}

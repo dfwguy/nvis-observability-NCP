@@ -1,0 +1,19 @@
+# Prometheus scrape fragment for the Job Monitor exporters.
+# Append these jobs under scrape_configs: in your prometheus.yml.
+# Both exporters use network_mode: host, so from the Prometheus container they are
+# reached via the Docker bridge gateway (172.17.0.1). If Prometheus runs on the host,
+# use localhost instead.
+
+- job_name: llmb-job-exporter
+  scrape_interval: 30s
+  static_configs:
+    - targets: ["172.17.0.1:9119"]
+      labels:
+        component: job-monitor
+
+- job_name: slurm-job-exporter
+  scrape_interval: 30s
+  static_configs:
+    - targets: ["172.17.0.1:9402"]
+      labels:
+        component: job-monitor

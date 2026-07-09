@@ -1,0 +1,9 @@
+[Unit]
+# Oneshot driven by nvis-hca-collector.timer. Writes ib_hca.prom into the
+# node_exporter textfile dir. install-node.sh renders this pair per node.
+Description=NVIS IB HCA verbs textfile collector
+After=node_exporter.service
+[Service]
+Type=oneshot
+Environment=TEXTFILE_DIR=/var/lib/node_exporter/textfile_collector
+ExecStart=/usr/local/bin/hca_verbs_collector.sh

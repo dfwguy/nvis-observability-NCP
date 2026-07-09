@@ -1,0 +1,34 @@
+# systemd unit for running the generic Slurm job exporter DIRECTLY on the Slurm
+# controller / login node (SLURM_MODE=local), where squeue/sacct and munge are
+# already present. This is the alternative to the containerized ssh-mode service
+# in compose.job-monitor.yaml — use one or the other, not both.
+#
+# Install:
+#   install -Dm755 slurm_job_exporter.py /opt/nvis/slurm_job_exporter.py
+#   install -Dm644 slurm-job-exporter.service /etc/systemd/system/slurm-job-exporter.service
+#   # edit /etc/default/slurm-job-exporter with your SLURM_CONF / SLURM_BIN / CLUSTER_NAME
+#   systemctl daemon-reload && systemctl enable --now slurm-job-exporter
+#
+# NO secrets belong in this unit; site values come from the EnvironmentFile below.
+[Unit]
+Description=NVIS generic Slurm job exporter (local mode)
+After=network-online.target munge.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Site values (SLURM_MODE=local, SLURM_CONF, SLURM_BIN, CLUSTER_NAME/DGX_FLAVOR,
+# SLURM_PORT, SACCT_HOURS). This file is created by the installer and is NOT committed.
+EnvironmentFile=-/etc/default/slurm-job-exporter
+Environment=SLURM_MODE=local
+ExecStart=/usr/bin/python3 /opt/nvis/slurm_job_exporter.py
+Restart=always
+RestartSec=5
+# Read-only accounting queries; drop privileges where possible.
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

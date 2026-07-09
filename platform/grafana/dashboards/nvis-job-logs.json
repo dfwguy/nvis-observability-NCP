@@ -1,0 +1,1233 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "🏠 NVIS Home",
+      "tooltip": "Back to NVIS Home",
+      "type": "link",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9900,
+      "options": {
+        "content": "<div style=\"display:flex;align-items:center;height:100%;\"><a href=\"/d/nvis-demo-home\" style=\"display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#00d4ff;border:1px solid #00d4ff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.5px;box-shadow:0 0 8px rgba(0,212,255,0.3);transition:all 0.2s;\" onmouseover=\"this.style.boxShadow='0 0 16px rgba(0,212,255,0.6)'\" onmouseout=\"this.style.boxShadow='0 0 8px rgba(0,212,255,0.3)'\">&#127968; NVIS Home</a></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 11,
+        "x": 3,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "content": "### 📜 Job Logs (L2) — XID · Slurm · Errors\nLog-layer (L2) triage for a Slurm job. Pick a **Job ID**; the **Node** selector auto-scopes to that job's nodes (from `cgroup_info`) and every Loki panel filters on it. Use **🔍 Log Search** for free-text. This board is the log companion to the metric-layer *Single Job Stats*: here you confirm the GPUs/driver logged **no fatal XID/NCCL faults**, isolating the failure to the fabric.",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": false,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 10,
+        "x": 14,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "content": "### 📄 NCCL per-rank crash detail → job `.out` (head NFS)\nNCCL comm aborts / per-rank stack traces are **not** in Loki — they are written to the job's stdout on the head node's NFS share:\n```\n/nvidia-testing/llmb_ex/workloads/<workload>/…/log-<name>_<JOBID>_0.out\n```\ne.g. `…/log-nemotron-h-56b_335_0.out`. `grep -nE 'ncclRemoteError|Watchdog|NCCL WARN|Aborted' log-*_$jobid_0.out` on the head node. Loki carries **kernel/syslog/slurm** streams only.",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": false,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 4,
+      "panels": [],
+      "title": "1 · XID errors (GPU driver — kern.log / syslog, benign 13/31/32/43/45 excluded)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Genuine XID log lines (benign codes excluded). 0 = GPU driver clean.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Total XID events",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No XID events — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"NVRM: Xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Total XID events (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Distinct job nodes with a genuine XID event.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Nodes affected",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ None affected — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (node) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"NVRM: Xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes affected",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Unique node×gpu×pci×code incidents (collapses DCGM re-logging).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Distinct XID incidents (deduped)",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No incidents — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (node, gpu, pci, xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" | regexp \"(?i)for gpu (?P<gpu>[0-9]+)\" | regexp \"(?i)pci:(?P<pci>[0-9a-f:]+)\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Distinct XID incidents (deduped)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Number of distinct non-benign XID codes seen.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Distinct XID codes",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ None — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Distinct XID codes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Raw XID lines for the job's nodes. Benign 13/31/32/43/45 filtered out. — An empty stream here = healthy (no matching errors in the selected range).",
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 9,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" |~ \"$log_search\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "XID log stream (benign excluded) — newest first",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 10,
+      "panels": [],
+      "title": "2 · Slurm prolog / epilog & slurmd errors",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Non-INFO (Warn/Error/Fatal/Crit) prolog & epilog lines for this job. 0 = setup/teardown clean.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Prolog / Epilog failures",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No failures — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 20
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({job=\"slurm\", filename=~\"/var/log/slurm-(prologs|epilogs).log\", node=~\"$node\"} | regexp \"^[^|]+[|](?P<lvl>[^|]+)[|](?P<jid>[^|]*)[|]\" | jid=~\"$jobid\" | lvl=~\"(?i)^(W|E|F|C)\" [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Prolog / Epilog failures (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "slurmd (compute-node daemon) error lines. Note: teardown 'Connection refused' is often benign.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "slurmd errors",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No errors — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 20
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({job=\"slurm\", filename=\"/var/log/slurmd\", node=~\"$node\"} |~ \"(?i)(error|fail|cannot|refused|denied|invalid)\" [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "slurmd errors (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Distinct job nodes emitting any slurm error/fail line.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Nodes with slurm errors",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ None affected — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 20
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (node) (count_over_time({job=\"slurm\", node=~\"$node\"} |~ \"(?i)(error|fail)\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes with slurm errors",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "prolog/epilog stream scoped to $jobid (format TS|LEVEL|JOBID|MSG). Failures carry level W/E/F/C — the 'Prolog/Epilog failures' tile counts them; put W or E in 🔍 Log Search to show only those. — An empty stream here = healthy (no matching errors in the selected range).",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 14,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"slurm\", filename=~\"/var/log/slurm-(prologs|epilogs).log\", node=~\"$node\"} | regexp \"^[^|]+[|](?P<lvl>[^|]+)[|](?P<jid>[^|]*)[|]\" | jid=~\"$jobid\" |~ \"$log_search\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Prolog / Epilog wrappers (failures = non-INFO; type W/E in Log Search to isolate)",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "slurmd error lines on the job's nodes. slurmctld is NOT scraped (runs on head node) — controller-side errors are not in Loki; check slurmctld.log on the head node. — An empty stream here = healthy (no matching errors in the selected range).",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 15,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"slurm\", filename=\"/var/log/slurmd\", node=~\"$node\"} |~ \"(?i)(error|fail|cannot|refused|denied|invalid)\" |~ \"$log_search\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "slurmd / slurm daemon errors",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 16,
+      "panels": [],
+      "title": "3 · NCCL / GPU kernel errors (NVRM · NVLink · watchdog · timeout)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "kern.log/syslog lines matching NVRM/NVLink/NCCL/watchdog/timeout (benign Xid & dcgm-exporter excluded).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "GPU/NCCL kernel error lines",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No errors — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 34
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} !~ \"dcgm-exporter\" |~ \"(?i)(NVRM|knvlink|nvidia-nvlink|ncclRemoteError|nccl|nvlink|GPU has fallen off|hung_task|watchdog: BUG|soft lockup|call trace|timed out|timeout)\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU/NCCL kernel error lines (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Distinct job nodes with a NCCL/GPU-kernel error line.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Nodes affected",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ None affected — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 34
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (node) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} !~ \"dcgm-exporter\" |~ \"(?i)(NVRM|knvlink|nvidia-nvlink|ncclRemoteError|nccl|nvlink|GPU has fallen off|hung_task|watchdog: BUG|soft lockup|call trace|timed out|timeout)\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes affected",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Genuinely-fatal subset: ncclRemoteError / GPU-fell-off-bus / NVLink down/error / watchdog BUG / hung_task / call trace. 0 = no kernel-level GPU crash (crash detail is in the job .out, not Loki).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Fatal NVLink/NCCL events",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No fatal events — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 34
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} !~ \"dcgm-exporter\" |~ \"(?i)(ncclRemoteError|GPU has fallen off|nvlink.*(down|error|inactive)|watchdog: BUG|hung_task|call trace)\" [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Fatal NVLink/NCCL events (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Broad GPU/NCCL kernel-error view for the job's nodes. dcgm-exporter re-logs and benign Xid excluded. — An empty stream here = healthy (no matching errors in the selected range).",
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 20,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} !~ \"dcgm-exporter\" |~ \"(?i)(NVRM|knvlink|nvidia-nvlink|ncclRemoteError|nccl|nvlink|GPU has fallen off|hung_task|watchdog: BUG|soft lockup|call trace|timed out|timeout)\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" |~ \"$log_search\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "NCCL / GPU kernel error stream (NVRM · NVLink · watchdog · timeout)",
+      "type": "logs"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "nvis",
+    "job",
+    "logs",
+    "slurm",
+    "xid",
+    "nccl",
+    "cluster"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "nvis-loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "DGX Flavor",
+        "multi": false,
+        "name": "dgx_flavor",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "query": "DGX SuperPOD",
+        "type": "custom",
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(slurm_job_info{cluster=~\"$cluster\"}, jobid)",
+        "description": "Select a Slurm Job ID. The Node selector below is auto-scoped to this job's nodes (via cgroup_exporter), which scopes every Loki panel.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job ID",
+        "multi": false,
+        "name": "jobid",
+        "options": [],
+        "query": {
+          "query": "label_values(slurm_job_info{cluster=~\"$cluster\"}, jobid)",
+          "refId": "JobIDQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 3,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(slurm_job_node{jobid=~\"$jobid\", cluster=~\"$cluster\"}, node)",
+        "description": "Nodes running the selected job (from cgroup_exporter). Defaults to All of the job's nodes; narrow if needed. Loki panels filter node=~\"$node\".",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(slurm_job_node{jobid=~\"$jobid\", cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        },
+        "description": "Type keyword + Enter (regex). Default .* = all. Examples: XID, error, NCCL, nvlink, timeout",
+        "hide": 0,
+        "label": "🔍 Log Search",
+        "name": "log_search",
+        "query": ".*",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "📜 Job Logs (L2) — XID · Slurm · Errors",
+  "uid": "nvis-job-logs",
+  "version": 5,
+  "weekStart": ""
+}

@@ -1,0 +1,14 @@
+# Runtime secrets and rendered site config — NEVER commit
+.env
+.env.local
+
+# Installer renders this from prometheus.yml.tmpl (may embed site values)
+prometheus/prometheus.rendered.yml
+
+# TLS material dropped at runtime
+certs/*
+!certs/.gitkeep
+
+# OS / logs
+*.log
+.DS_Store

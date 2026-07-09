@@ -1,0 +1,51 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# nginx stream (L4 TCP) relay — head-node → ObsVM
+#
+# Purpose: compute nodes are frequently network-blind to the ObsVM (they sit on
+# an isolated compute/management VLAN and can only reach the head/BCM node). The
+# head node CAN reach the ObsVM, so it runs this pass-through relay. Node Alloy
+# agents point remote_write / loki-push at RELAY_HOST:<port>; nginx forwards the
+# raw TCP stream to the ObsVM's Prometheus(:9090) and Loki(:3100).
+#
+#   node alloy ──► RELAY_HOST:${RELAY_RW_PORT}   ──► ${METRICS_TARGET}:9090  (remote_write)
+#   node alloy ──► RELAY_HOST:${RELAY_LOKI_PORT} ──► ${METRICS_TARGET}:3100  (loki push)
+#
+# Rendered from this template by setup-relay.sh (envsubst). This is a COMPLETE
+# nginx.conf: use it as the container's main config (head-relay.compose.yml) or
+# drop it in at /etc/nginx/nginx.conf on a bare-metal head node. The official
+# nginx image / nginx-full package includes the stream module statically.
+# ─────────────────────────────────────────────────────────────────────────────
+worker_processes auto;
+error_log /dev/stderr warn;
+pid /tmp/nginx-relay.pid;
+
+events {
+    worker_connections 4096;
+}
+
+stream {
+    # ObsVM upstreams. ${METRICS_TARGET} is the ObsVM host/IP; ports are the
+    # native Prometheus remote-write receiver and Loki push listeners.
+    upstream obsvm_prometheus {
+        server ${METRICS_TARGET}:9090;
+    }
+    upstream obsvm_loki {
+        server ${METRICS_TARGET}:3100;
+    }
+
+    # Prometheus remote_write relay
+    server {
+        listen ${RELAY_RW_PORT};
+        proxy_pass obsvm_prometheus;
+        proxy_connect_timeout 5s;
+        proxy_timeout 60s;
+    }
+
+    # Loki push relay
+    server {
+        listen ${RELAY_LOKI_PORT};
+        proxy_pass obsvm_loki;
+        proxy_connect_timeout 5s;
+        proxy_timeout 60s;
+    }
+}

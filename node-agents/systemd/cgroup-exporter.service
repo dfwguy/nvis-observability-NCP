@@ -1,0 +1,14 @@
+[Unit]
+# Per-Slurm-job cgroup v2 metrics. --config.paths=/slurm auto-maps to
+# /system.slice/slurmstepd.scope; emits cgroup_info{jobid,uid,username} plus
+# cgroup_cpu_*/cgroup_memory_* keyed by cgroup. Series only appear while jobs run.
+Description=cgroup_exporter (NVIS — per-Slurm-job metrics)
+After=network-online.target slurmd.service
+Wants=network-online.target
+[Service]
+ExecStart=/usr/local/bin/cgroup_exporter --config.paths=/slurm --collect.proc --web.listen-address=:9306
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target

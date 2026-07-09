@@ -1,0 +1,85 @@
+# ---------------------------------------------------------------------------
+# nvis-ova — Job Monitor compose fragment  (exporter-job-monitor component)
+#
+# Two exporters that answer "where did my validation/benchmark job go, and is it
+# healthy?" for a DGX SuperPOD cluster:
+#
+#   llmb-job-exporter   :9119  reads the per-job training stdout logs that the
+#                              LLMB / dgxc-benchmarking harness drops on the shared
+#                              filesystem and emits per-JOBID progress/perf/stall
+#                              metrics. Filesystem-only (no SSH, no creds).
+#   slurm-job-exporter  :9402  squeue + sacct -> slurm_job_info and a jobid->node
+#                              bridge (slurm_job_node). Runs locally on the Slurm
+#                              controller, or over SSH to it.
+#
+# Merge into the main stack, e.g.:
+#   docker compose -f docker-compose.yml -f exporters/compose.job-monitor.yaml up -d
+#
+# Every value below is env-driven; fill .env (gitignored) via the interview
+# installer. NOTHING here is site-specific and NO secret is committed.
+# ---------------------------------------------------------------------------
+services:
+  llmb-job-exporter:
+    image: python:3.11-slim
+    container_name: nvis-llmb-job-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      # Root where validation-job logs + results land (shared FS / VAST mount). Required.
+      - SLURM_JOB_LOG_DIR=${SLURM_JOB_LOG_DIR:-}
+      # Glob for the training stdout log; relative to the root unless absolute.
+      - SLURM_LOG_GLOB=${SLURM_LOG_GLOB:-workloads/*/experiments/*/*/*/log-*_*_0.out}
+      # Optional harness job registry (identity labels only). Empty = skip.
+      - SLURM_REGISTRY_SQLITE=${SLURM_REGISTRY_SQLITE:-}
+      # cluster/platform label value (never a hostname).
+      - DGX_FLAVOR=${DGX_FLAVOR:-cluster}
+      - LLMB_EXPORTER_PORT=9119
+      - LLMB_EXPORTER_INTERVAL=${LLMB_EXPORTER_INTERVAL:-30}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./exporters/llmb-job:/app:ro
+      # Bind the log root read-only at the SAME path so glob results resolve inside the container.
+      - ${SLURM_JOB_LOG_DIR}:${SLURM_JOB_LOG_DIR}:ro
+    command: ["python3", "/app/llmb_job_exporter.py"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9119/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  slurm-job-exporter:
+    image: python:3.11-slim
+    container_name: nvis-slurm-job-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      # Empty = auto: "ssh" when BCM_HOST is set, else "local". In a container you almost
+      # always want ssh (slurm client binaries live on the controller, not in this image).
+      # For an on-controller deployment use the systemd unit + SLURM_MODE=local instead.
+      - SLURM_MODE=${SLURM_MODE:-}
+      # SSH target for ssh mode (leave empty only for on-controller/local mode).
+      - BCM_HOST=${BCM_HOST:-}
+      - BCM_USER=${BCM_USER:-root}
+      - BCM_JUMP=${BCM_JUMP:-}
+      - BCM_SSH_KEY=/root/.ssh/id_ed25519
+      - BCM_SSH_PORT=${BCM_SSH_PORT:-22}
+      # squeue/sacct location + slurm.conf when not on the default PATH / no DNS SRV.
+      - SLURM_BIN=${SLURM_BIN:-}
+      - SLURM_CONF=${SLURM_CONF:-}
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      - DGX_FLAVOR=${DGX_FLAVOR:-cluster}
+      - SLURM_PORT=9402
+      - SCRAPE_INTERVAL=${SLURM_SCRAPE_INTERVAL:-30}
+      - SACCT_HOURS=${SACCT_HOURS:-24}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./exporters/slurm-job:/app:ro
+      - ~/.ssh:/root/.ssh:ro
+    command: >
+      bash -c "apt-get update -qq && apt-get install -y -qq --no-install-recommends openssh-client &&
+               exec python3 /app/slurm_job_exporter.py"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9402/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

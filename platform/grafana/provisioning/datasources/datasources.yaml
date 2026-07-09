@@ -1,0 +1,43 @@
+# =============================================================================
+# Grafana datasources (file-provisioned, read-only).
+# VictoriaMetrics is the DEFAULT: dashboards and Explore default to seamless
+# long-range history. Prometheus stays for recent/high-resolution queries and
+# Grafana-managed alert rules. Both speak the Prometheus query API, so the same
+# dashboards work against either uid. Loki serves logs.
+# Datasources reach the other services by compose DNS name — no IPs.
+# =============================================================================
+apiVersion: 1
+
+datasources:
+  - name: VictoriaMetrics
+    uid: nvis-victoriametrics
+    type: prometheus
+    access: proxy
+    url: http://victoriametrics:8428
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      prometheusType: Prometheus
+      timeInterval: 15s
+
+  - name: Prometheus
+    uid: nvis-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+
+  - name: Loki
+    uid: nvis-loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: false
+    jsonData:
+      maxLines: 2000

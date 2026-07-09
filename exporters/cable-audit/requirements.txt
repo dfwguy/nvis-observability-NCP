@@ -1,0 +1,5 @@
+# cable_audit_scan.py runtime deps.
+# Live SSH scan (SCAN_MODE=ssh) uses paramiko; everything else is Python stdlib.
+# (UFM mode, dry-run and --validate need NO third-party deps — paramiko is
+#  imported lazily only inside the live SSH path.)
+paramiko>=3.4,<4

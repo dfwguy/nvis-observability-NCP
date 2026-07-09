@@ -1,0 +1,1515 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "XID errors across the DGX SuperPOD fleet, sourced from logs (Loki) — no DCGM XID metric exists on this cluster. Table-focused: occurrences by XID code & node, plus raw per-event timestamps.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "🏠 NVIS Home",
+      "tooltip": "Back to NVIS Home",
+      "type": "link",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}"
+    }
+  ],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<div style=\"display:flex;align-items:center;height:100%;\"><a href=\"/d/nvis-demo-home\" style=\"display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#00d4ff;border:1px solid #00d4ff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.5px;\">&#127968; NVIS Home</a></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 21,
+        "x": 3,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "content": "### 🛑 XID Errors — DGX SuperPOD fleet\nThere is **no DCGM XID metric** on this cluster — XID errors are sourced from **logs (Loki)**: kernel `NVRM: Xid (PCI:…): <code>` (syslog) and DCGM `XID <code>` (nv-hostengine.log). Refresh is disabled; queries are log-heavy.",
+        "mode": "markdown"
+      },
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 100,
+      "title": "Summary",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Total genuine hardware XID log lines over the range. Scoped to kernel `NVRM: Xid`. Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Total XID events",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No XID events — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 3
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"NVRM: Xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Total XID events (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Distinct nodes with at least one genuine hardware XID over the range. Scoped to kernel `NVRM: Xid`. Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Nodes affected",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ None affected — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 3
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (node) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"NVRM: Xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes affected",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Count of distinct genuine hardware XID codes over the range. Scoped to kernel `NVRM: Xid`. Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Distinct XID codes",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ None"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ None — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 3
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"NVRM: Xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" [$__range])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Distinct XID codes",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 101,
+      "title": "XID errors by code & node",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Instant LogQL aggregation of XID log lines (kernel NVRM + DCGM nv-hostengine) grouped by node and XID code. Counts are log-line occurrences, not distinct incidents — DCGM health-watch repeats the same XID each poll cycle. — Empty = healthy (no XID errors in the selected range).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "mappings": [],
+          "noValue": "✓ No XID errors — GPUs healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "119": {
+                        "index": 13,
+                        "text": "119 · GSP RPC timeout"
+                      },
+                      "120": {
+                        "index": 14,
+                        "text": "120 · GSP error"
+                      },
+                      "13": {
+                        "index": 0,
+                        "text": "13 · Graphics engine error"
+                      },
+                      "31": {
+                        "index": 1,
+                        "text": "31 · GPU memory page fault (MMU)"
+                      },
+                      "43": {
+                        "index": 2,
+                        "text": "43 · GPU stopped processing"
+                      },
+                      "45": {
+                        "index": 3,
+                        "text": "45 · Preemptive channel cleanup"
+                      },
+                      "48": {
+                        "index": 4,
+                        "text": "48 · Double-bit ECC (DBE)"
+                      },
+                      "62": {
+                        "index": 5,
+                        "text": "62 · Internal micro-controller halt"
+                      },
+                      "63": {
+                        "index": 6,
+                        "text": "63 · ECC page retire / row-remap recorded"
+                      },
+                      "64": {
+                        "index": 7,
+                        "text": "64 · ECC row-remap failure"
+                      },
+                      "74": {
+                        "index": 8,
+                        "text": "74 · NVLink error"
+                      },
+                      "79": {
+                        "index": 9,
+                        "text": "79 · GPU fell off the bus"
+                      },
+                      "92": {
+                        "index": 10,
+                        "text": "92 · High single-bit ECC rate"
+                      },
+                      "94": {
+                        "index": 11,
+                        "text": "94 · Contained ECC error"
+                      },
+                      "95": {
+                        "index": 12,
+                        "text": "95 · Uncontained ECC error"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Occurrences"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-YlRd"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 20,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "fields": [
+            "Occurrences"
+          ],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Occurrences"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (node, xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" [$__range]))",
+          "format": "table",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "XID errors by code & node (occurrences in range)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Value": 2,
+              "node": 1,
+              "xid": 0
+            },
+            "renameByName": {
+              "Value": "Occurrences",
+              "node": "Node",
+              "xid": "XID"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 102,
+      "title": "Raw XID events (timestamps)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Individual XID log lines with timestamp, node and message. Line-limited for performance; refine with the Node filter or narrow the time range. — Empty = healthy (no XID errors in the selected range).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "noValue": "✓ No XID errors — GPUs healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Node"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 30,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\"",
+          "maxLines": 1000,
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Raw XID events — per-occurrence timestamps (newest first)",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "keepTime": false,
+            "replace": false,
+            "source": "labels"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__stream_shard__": true,
+              "cluster": true,
+              "detected_level": true,
+              "filename": true,
+              "id": true,
+              "instance": true,
+              "job": true,
+              "labels": true,
+              "level": true,
+              "log_type": true,
+              "service_name": true,
+              "tsNs": true,
+              "unit": true
+            },
+            "indexByName": {
+              "Line": 2,
+              "Time": 0,
+              "node": 1
+            },
+            "renameByName": {
+              "Line": "Message",
+              "node": "Node"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 103,
+      "title": "Trend (optional)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Genuine hardware XID occurrences over time by code. Scoped to kernel `NVRM: Xid`. Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only. — Flat/empty = healthy (no XID occurrences in the selected range).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "lineWidth": 1,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "id": 40,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"NVRM: Xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" [$__interval]))",
+          "legendFormat": "XID {{xid}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "XID occurrences over time by code",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 199,
+      "title": "Distinct Incidents (deduped)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Left = DISTINCT incidents, right = RAW log lines, both over the selected range. An incident = a unique (node, gpu/pci, xid) combination; every re-log of that same combo collapses into ONE incident (whole-range coalescing). DCGM health-watch re-emits the same XID every poll cycle, so the raw count is hugely inflated versus the number of real events. The gap between the two numbers IS the DCGM re-log noise. Distinct = count(distinct (node,gpu,pci,xid)); Raw = count of all matching log lines. This stat is computed with metric LogQL (not sampled/maxLines-limited), so it is the authoritative headline count. Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "Distinct incidents vs raw log lines",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "text": "✓ Healthy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "✓ No incidents — healthy",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 210,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (node, gpu, pci, xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" | regexp \"(?i)for gpu (?P<gpu>[0-9]+)\" | regexp \"(?i)pci:(?P<pci>[0-9a-f:]+)\" [$__range])))",
+          "legendFormat": "Distinct incidents",
+          "queryType": "instant",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range]))",
+          "legendFormat": "Raw log lines (DCGM re-logs)",
+          "queryType": "instant",
+          "refId": "B"
+        }
+      ],
+      "title": "Distinct incidents vs raw log lines",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "One row per DISTINCT incident = a unique (node, gpu, pci, xid) combination. Dedup method: pull the raw XID log lines (kernel NVRM + DCGM), parse the XID code, the DCGM GPU index (\"for GPU N\") and the NVRM PCI address, then GROUP the lines by (node, gpu, pci, xid). Grafana's Group-by transform reduces each group to First seen (min timestamp), Last seen (max timestamp) and the number of re-logs collapsed. So the many DCGM re-logs of the same XID become a single incident row with a real first-seen time. NOTE: this table is built from log lines (direction=forward, capped at maxLines=5000 so the OLDEST lines — the true first-seen — are retained); on very busy ranges the 'Re-logs (sampled)' column is a sample, but the incident rows and first-seen times are still correct. Use the stat above for the authoritative (non-sampled) distinct count. NVRM kernel lines carry a PCI address (not a GPU index) so their GPU column is blank and PCI is populated; DCGM lines are the reverse. Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only. — Empty = healthy (no XID errors in the selected range).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "mappings": [],
+          "noValue": "✓ No XID errors — GPUs healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "First seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Re-logs (sampled)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-YlRd"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "119": {
+                        "index": 13,
+                        "text": "119 · GSP RPC timeout"
+                      },
+                      "120": {
+                        "index": 14,
+                        "text": "120 · GSP error"
+                      },
+                      "13": {
+                        "index": 0,
+                        "text": "13 · Graphics engine error"
+                      },
+                      "31": {
+                        "index": 1,
+                        "text": "31 · GPU memory page fault (MMU)"
+                      },
+                      "43": {
+                        "index": 2,
+                        "text": "43 · GPU stopped processing"
+                      },
+                      "45": {
+                        "index": 3,
+                        "text": "45 · Preemptive channel cleanup"
+                      },
+                      "48": {
+                        "index": 4,
+                        "text": "48 · Double-bit ECC (DBE)"
+                      },
+                      "62": {
+                        "index": 5,
+                        "text": "62 · Internal micro-controller halt"
+                      },
+                      "63": {
+                        "index": 6,
+                        "text": "63 · ECC page retire / row-remap recorded"
+                      },
+                      "64": {
+                        "index": 7,
+                        "text": "64 · ECC row-remap failure"
+                      },
+                      "74": {
+                        "index": 8,
+                        "text": "74 · NVLink error"
+                      },
+                      "79": {
+                        "index": 9,
+                        "text": "79 · GPU fell off the bus"
+                      },
+                      "92": {
+                        "index": 10,
+                        "text": "92 · High single-bit ECC rate"
+                      },
+                      "94": {
+                        "index": 11,
+                        "text": "94 · Contained ECC error"
+                      },
+                      "95": {
+                        "index": 12,
+                        "text": "95 · Uncontained ECC error"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 300
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 200,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "fields": [
+            "XID"
+          ],
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "First seen"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "direction": "forward",
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" | regexp \"(?i)for gpu (?P<gpu>[0-9]+)\" | regexp \"(?i)pci:(?P<pci>[0-9a-f:]+)\"",
+          "maxLines": 5000,
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Distinct XID incidents (node × gpu × code, first-seen)",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "keepTime": true,
+            "replace": false,
+            "source": "labels"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Time": {
+                "aggregations": [
+                  "min",
+                  "max",
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "gpu": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "node": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "pci": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "xid": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "Time (count)": 6,
+              "Time (max)": 5,
+              "Time (min)": 4,
+              "gpu": 2,
+              "node": 1,
+              "pci": 3,
+              "xid": 0
+            },
+            "renameByName": {
+              "Time (count)": "Re-logs (sampled)",
+              "Time (max)": "Last seen",
+              "Time (min)": "First seen",
+              "gpu": "GPU",
+              "node": "Node",
+              "pci": "PCI",
+              "xid": "XID"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "description": "Per XID code summary of DISTINCT incidents. Dedup method (two-stage group-by on the parsed log lines): (1) group by (node, gpu, xid) so all re-logs of the same incident collapse into one row carrying its first/last timestamp; (2) group that result by xid, counting the collapsed rows to get 'Distinct incidents (node×gpu)' and taking min/max of the timestamps for First seen / Last seen. This shows, per code, how many REAL device incidents occurred versus how noisy the raw logs are. NOTE: built from sampled log lines (maxLines=5000, forward); the authoritative non-sampled distinct total is in the stat panel above. An incident here = a (node, gpu, xid) tuple seen anywhere in the range (whole-range coalescing of DCGM re-logs). Benign/app-level XIDs (13,31,32,43,45) excluded; genuine hardware XIDs only. — Empty = healthy (no XID errors in the selected range).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "mappings": [],
+          "noValue": "✓ No XID errors — GPUs healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "First seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Distinct incidents (node×gpu)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-YlRd"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "XID"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "119": {
+                        "index": 13,
+                        "text": "119 · GSP RPC timeout"
+                      },
+                      "120": {
+                        "index": 14,
+                        "text": "120 · GSP error"
+                      },
+                      "13": {
+                        "index": 0,
+                        "text": "13 · Graphics engine error"
+                      },
+                      "31": {
+                        "index": 1,
+                        "text": "31 · GPU memory page fault (MMU)"
+                      },
+                      "43": {
+                        "index": 2,
+                        "text": "43 · GPU stopped processing"
+                      },
+                      "45": {
+                        "index": 3,
+                        "text": "45 · Preemptive channel cleanup"
+                      },
+                      "48": {
+                        "index": 4,
+                        "text": "48 · Double-bit ECC (DBE)"
+                      },
+                      "62": {
+                        "index": 5,
+                        "text": "62 · Internal micro-controller halt"
+                      },
+                      "63": {
+                        "index": 6,
+                        "text": "63 · ECC page retire / row-remap recorded"
+                      },
+                      "64": {
+                        "index": 7,
+                        "text": "64 · ECC row-remap failure"
+                      },
+                      "74": {
+                        "index": 8,
+                        "text": "74 · NVLink error"
+                      },
+                      "79": {
+                        "index": 9,
+                        "text": "79 · GPU fell off the bus"
+                      },
+                      "92": {
+                        "index": 10,
+                        "text": "92 · High single-bit ECC rate"
+                      },
+                      "94": {
+                        "index": 11,
+                        "text": "94 · Contained ECC error"
+                      },
+                      "95": {
+                        "index": 12,
+                        "text": "95 · Uncontained ECC error"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "id": 220,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "fields": [
+            "Distinct incidents (node×gpu)"
+          ],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Distinct incidents (node×gpu)"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "direction": "forward",
+          "editorMode": "code",
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" | regexp \"(?i)for gpu (?P<gpu>[0-9]+)\"",
+          "maxLines": 5000,
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Distinct XID incidents by code (distinct node×gpu, first-seen, last-seen)",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "keepTime": true,
+            "replace": false,
+            "source": "labels"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Time": {
+                "aggregations": [
+                  "min",
+                  "max"
+                ],
+                "operation": "aggregate"
+              },
+              "gpu": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "node": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "xid": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Time (max)": {
+                "aggregations": [
+                  "max"
+                ],
+                "operation": "aggregate"
+              },
+              "Time (min)": {
+                "aggregations": [
+                  "min"
+                ],
+                "operation": "aggregate"
+              },
+              "node": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "xid": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "Time (max) (max)": 3,
+              "Time (min) (min)": 2,
+              "node (count)": 1,
+              "xid": 0
+            },
+            "renameByName": {
+              "Time (max) (max)": "Last seen",
+              "Time (min) (min)": "First seen",
+              "node (count)": "Distinct incidents (node×gpu)",
+              "xid": "XID"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "nvis",
+    "xid",
+    "gpu",
+    "logs",
+    "cluster"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "nvis-loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "${loki_datasource}"
+        },
+        "definition": "label_values(cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "label": "cluster",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "DGX Flavor",
+        "multi": false,
+        "name": "dgx_flavor",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "query": "DGX SuperPOD",
+        "type": "custom",
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "${loki_datasource}"
+        },
+        "definition": "label_values({cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "label": "node",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "{cluster=~\"$cluster\"}",
+          "type": 1
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "XID Errors — DGX SuperPOD",
+  "uid": "nvis-xid-errors",
+  "version": 6,
+  "weekStart": ""
+}

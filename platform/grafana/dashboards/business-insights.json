@@ -1,0 +1,1378 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Active nodes · GPU allocation · Team usage · Token analytics · Training performance · Job activity",
+  "id": null,
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9900,
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"display:flex;align-items:center;height:100%;\"><a href=\"/d/nvis-demo-home\" style=\"display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#00d4ff;border:1px solid #00d4ff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.5px;box-shadow:0 0 8px rgba(0,212,255,0.3);transition:all 0.2s;\" onmouseover=\"this.style.boxShadow='0 0 16px rgba(0,212,255,0.6)'\" onmouseout=\"this.style.boxShadow='0 0 8px rgba(0,212,255,0.3)'\">&#127968; NVIS Home</a></div>",
+        "justifyContent": "center",
+        "alignItems": "center"
+      },
+      "transparent": true
+    },
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 1,
+      "options": {
+        "content": "<div style=\"padding:12px 20px;background:linear-gradient(135deg,#060d14,#0d1828);border-radius:10px;border:1px solid #76b90040;font-family:monospace;display:flex;justify-content:space-between;align-items:center\">\n<div>\n <div style=\"color:#76b900;font-size:18px;font-weight:700;letter-spacing:2px\">⚡ SuperPOD — Operational Intelligence</div>\n <div style=\"color:#8b949e;font-size:11px;margin-top:2px\">GPU allocation · Active workloads · Team usage · Token analytics · Training performance</div>\n</div>\n<div style=\"text-align:right;font-family:monospace;font-size:10px;color:#8b949e\">\n <div style=\"color:#76b900;font-size:12px;font-weight:700\">🟢 CLUSTER OPERATIONAL</div>\n <div>Auto-refresh: 30s · Live data</div>\n</div>\n</div>",
+        "mode": "html"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "title": "🖥️ Fleet Status & GPU Allocation",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(up{job=\"node-exporter\",cluster=~\"$cluster\"} == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Active Nodes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(up{job=\"node-exporter\",cluster=~\"$cluster\"} == 0) or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Offline / RMA",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 6
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} >= 0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs Online",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "thresholds",
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 10
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 92
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Utilization",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "thresholds",
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 10
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 92
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 6
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\"})/(sum(DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\"})+sum(DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\"}))*100",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "VRAM Allocated",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 6
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\"})/1024",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "VRAM Free (GB)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 6
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "slurm_jobs_running_total{cluster=~\"$cluster\"} or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Active Jobs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 6
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "sparkline",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "text": {
+          "valueSize": 24
+        }
+      },
+      "targets": [
+        {
+          "expr": "slurm_jobs_pending_total{cluster=~\"$cluster\"} or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Queued Jobs",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 11,
+      "title": "📊 Allocation & Usage Trends",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 15,
+            "lineWidth": 2
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 92
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(15, avg by (node) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"}))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Utilization Over Time — Top 15 Busiest Nodes",
+      "description": "Per-node avg GPU utilization, limited to the 15 highest to stay readable across fleet-scale. Use the node variable to drill into specific nodes.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 7,
+        "x": 12,
+        "y": 11
+      },
+      "id": 13,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ]
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "expr": "topk(20, avg by (node)(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"}))",
+          "instant": true,
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 20 Nodes by Avg GPU Utilization",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 92
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 19,
+        "y": 11
+      },
+      "id": 14,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Util %",
+            "desc": true
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "expr": "DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"} > 0",
+          "instant": true,
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "device": true,
+              "Hostname": true,
+              "instance": true,
+              "dgx_flavor": true,
+              "cluster": true,
+              "UUID": true,
+              "pci_bus_id": true,
+              "modelName": true
+            },
+            "renameByName": {
+              "Value": "Util %",
+              "node": "Node",
+              "gpu": "GPU"
+            }
+          }
+        }
+      ],
+      "title": "Busiest GPUs — Current Util",
+      "description": "Currently active GPUs (util > 0), sorted by utilization. Empty when the fleet is idle.",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 15,
+      "title": "📈 Training Performance",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 21
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "noValue": "Pending NIM",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg(slurm_jobs_active_total{cluster=~\"$cluster\"}) or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Training Job Time",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 21
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "noValue": "Pending NIM",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(slurm_jobs_recent_total) or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Jobs Completed Today",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 24,
+      "title": "👥 Team Usage Breakdown",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 15,
+            "lineWidth": 2
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 700
+              },
+              {
+                "color": "red",
+                "value": 1200
+              }
+            ]
+          },
+          "unit": "watt"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(15, DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}} GPU{{gpu}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Power — Top 15 Highest-Draw GPUs",
+      "description": "Highest-power GPUs across the fleet (thousands of GPUs) as a workload indicator; limited to top 15 to stay readable.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 15,
+            "lineWidth": 2
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 28000
+              },
+              {
+                "color": "red",
+                "value": 36000
+              }
+            ]
+          },
+          "unit": "decmbytes"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(15, DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}} GPU{{gpu}}",
+          "refId": "A"
+        }
+      ],
+      "title": "VRAM Usage — Top 15 Highest GPUs",
+      "description": "GPUs with the most framebuffer memory allocated; limited to top 15 to stay readable across the fleet.",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power (W)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 700
+                    },
+                    {
+                      "color": "red",
+                      "value": 1200
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VRAM Used (MB)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decmbytes"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temp (°C)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 29,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Power (W)",
+            "desc": true
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "expr": "DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "format": "table",
+          "refId": "A"
+        },
+        {
+          "expr": "DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "format": "table",
+          "refId": "B"
+        },
+        {
+          "expr": "DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "format": "table",
+          "refId": "C"
+        },
+        {
+          "expr": "DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "format": "table",
+          "refId": "D"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "device": true,
+              "Hostname": true,
+              "instance": true,
+              "dgx_flavor": true,
+              "cluster": true,
+              "UUID": true
+            },
+            "renameByName": {
+              "Value #A": "Power (W)",
+              "Value #B": "VRAM Used (MB)",
+              "Value #C": "Temp (°C)",
+              "Value #D": "Util %",
+              "node": "Node",
+              "gpu": "GPU",
+              "modelName": "Model",
+              "pci_bus_id": "PCI Bus"
+            }
+          }
+        }
+      ],
+      "title": "Current Top Consumers — Power / VRAM / Temp / Util per GPU",
+      "description": "Live per-GPU snapshot merged across power, VRAM, temperature and utilization, sorted by power draw. Sortable/filterable to find the heaviest workloads.",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 27,
+      "title": "📋 Active Job Activity",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "id": 28,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{cluster=\"cluster\", job=~\"slurm|slurmd\", node=~\"$node\"} |~ \"(?i)(job|step|begun|ended|fail|cancel|complete|launch|error)\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm Job Events — Start / End / Failures",
+      "type": "logs"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "nvis",
+    "executive",
+    "roi",
+    "business"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "nvis-loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "name": "dgx_flavor",
+        "label": "DGX Flavor",
+        "type": "custom",
+        "query": "DGX SuperPOD",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Operational Intelligence — Allocation, Usage & Performance",
+  "uid": "nvis-business-insights",
+  "version": 2,
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Back to NVIS Home",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ]
+}

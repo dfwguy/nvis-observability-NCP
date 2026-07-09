@@ -1,0 +1,4096 @@
+{
+  "id": null,
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9900,
+      "options": {
+        "mode": "html",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "content": "<div style=\"display:flex;align-items:center;height:100%;\"><a href=\"/d/nvis-demo-home\" style=\"display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#00d4ff;border:1px solid #00d4ff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.5px;box-shadow:0 0 8px rgba(0,212,255,0.3);transition:all 0.2s;\" onmouseover=\"this.style.boxShadow='0 0 16px rgba(0,212,255,0.6)'\" onmouseout=\"this.style.boxShadow='0 0 8px rgba(0,212,255,0.3)'\">&#127968; NVIS Home</a></div>"
+      },
+      "transparent": true
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "title": "🚨 Fleet Issues — offender nodes (cluster-wide, ignores Node filter)",
+      "type": "row",
+      "id": 100
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 3
+      },
+      "id": 101,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(count by(node)((1 - node_filesystem_avail_bytes{cluster=~\"$cluster\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"} / node_filesystem_size_bytes{cluster=~\"$cluster\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"}) * 100 > 85))) or vector(0)",
+          "instant": true,
+          "legendFormat": "Nodes disk >85%",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes disk >85%",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 3
+      },
+      "id": 102,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(count by(node)(node_load15{cluster=~\"$cluster\"} / on(instance) group_left() count by(instance)(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\"}) > 1))) or vector(0)",
+          "instant": true,
+          "legendFormat": "Nodes load>1/core",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes load>1/core",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 3
+      },
+      "id": 103,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(sum by(node,device)(increase(node_network_receive_errs_total{cluster=~\"$cluster\",device!~\"lo\"}[15m]) + increase(node_network_transmit_errs_total{cluster=~\"$cluster\",device!~\"lo\"}[15m])) > 0)) or vector(0)",
+          "instant": true,
+          "legendFormat": "NIC error ports",
+          "refId": "A"
+        }
+      ],
+      "title": "NIC error ports",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 9,
+        "y": 3
+      },
+      "id": 104,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(sum by(node,device)(increase(node_infiniband_port_errors_received_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_symbol_error_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_link_downed_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_link_error_recovery_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_local_link_integrity_errors_total{cluster=~\"$cluster\"}[1h])) > 0)) or vector(0)",
+          "instant": true,
+          "legendFormat": "IB error ports",
+          "refId": "A"
+        }
+      ],
+      "title": "IB error ports",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 12,
+        "y": 3
+      },
+      "id": 105,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(count by(node)((node_edac_uncorrectable_errors_total{cluster=~\"$cluster\"}>0) or (node_edac_correctable_errors_total{cluster=~\"$cluster\"}>0)))) or vector(0)",
+          "instant": true,
+          "legendFormat": "Nodes mem ECC",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes mem ECC",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 15,
+        "y": 3
+      },
+      "id": 106,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count((DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\"}>0) or (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\"}>0) or (DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\"}>0))) or vector(0)",
+          "instant": true,
+          "legendFormat": "GPUs w/ ECC/remap",
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs w/ ECC/remap",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 18,
+        "y": 3
+      },
+      "id": 107,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(count by(node)(increase(node_vmstat_oom_kill{cluster=~\"$cluster\"}[1h])>0))) or vector(0)",
+          "instant": true,
+          "legendFormat": "Nodes OOM (1h)",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes OOM (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 21,
+        "y": 3
+      },
+      "id": 108,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(count(node_filesystem_readonly{cluster=~\"$cluster\"}>0)) or vector(0)",
+          "instant": true,
+          "legendFormat": "FS read-only",
+          "refId": "A"
+        }
+      ],
+      "title": "FS read-only",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Real filesystems above 85% usage. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 85
+              },
+              {
+                "color": "red",
+                "value": 95
+              }
+            ]
+          },
+          "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "id": 110,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Used %",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(1 - node_filesystem_avail_bytes{cluster=~\"$cluster\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"} / node_filesystem_size_bytes{cluster=~\"$cluster\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"}) * 100 > 85",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Used %"
+            },
+            "indexByName": {
+              "node": 0,
+              "mountpoint": 1,
+              "device": 2,
+              "Used %": 3
+            }
+          }
+        }
+      ],
+      "title": "Disk / filesystem >85% full",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "load15 divided by CPU thread count. >1 = saturated. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 6
+      },
+      "id": 111,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Load15/core",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_load15{cluster=~\"$cluster\"} / on(instance) group_left() count by(instance)(node_cpu_seconds_total{cluster=~\"$cluster\",mode=\"idle\"}) > 1",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Load15/core"
+            },
+            "indexByName": {
+              "node": 0,
+              "Load15/core": 1
+            }
+          }
+        }
+      ],
+      "title": "High system load (load15 per core > 1)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Nodes with OOM kills in last 1h. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
+      "id": 112,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "OOM kills (1h)",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "increase(node_vmstat_oom_kill{cluster=~\"$cluster\"}[1h]) > 0",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "OOM kills (1h)"
+            },
+            "indexByName": {
+              "node": 0,
+              "OOM kills (1h)": 1
+            }
+          }
+        }
+      ],
+      "title": "OOM kills & blocked processes (1h)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "RX+TX interface errors over 15m. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 13
+      },
+      "id": 120,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Errors (15m)",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(node,device)(increase(node_network_receive_errs_total{cluster=~\"$cluster\",device!~\"lo\"}[15m]) + increase(node_network_transmit_errs_total{cluster=~\"$cluster\",device!~\"lo\"}[15m])) > 0",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Errors (15m)"
+            },
+            "indexByName": {
+              "node": 0,
+              "device": 1,
+              "Errors (15m)": 2
+            }
+          }
+        }
+      ],
+      "title": "NIC errors (Ethernet/bond, 15m)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Port errors + symbol errors + link downed/recovery + link-integrity over 1h. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 13
+      },
+      "id": 121,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "IB errors (1h)",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum by(node,device)(increase(node_infiniband_port_errors_received_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_symbol_error_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_link_downed_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_link_error_recovery_total{cluster=~\"$cluster\"}[1h]) + increase(node_infiniband_local_link_integrity_errors_total{cluster=~\"$cluster\"}[1h])) > 0",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "IB errors (1h)"
+            },
+            "indexByName": {
+              "node": 0,
+              "device": 1,
+              "IB errors (1h)": 2
+            }
+          }
+        }
+      ],
+      "title": "InfiniBand fabric errors (1h)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Read-only mounts or filesystem device errors. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 13
+      },
+      "id": 122,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Read-only",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_filesystem_readonly{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_filesystem_device_error{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "B",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value #A": "Read-only",
+              "Value #B": "Device error"
+            },
+            "indexByName": {
+              "node": 0,
+              "mountpoint": 1,
+              "device": 2,
+              "Read-only": 3,
+              "Device error": 4
+            }
+          }
+        }
+      ],
+      "title": "Filesystem read-only / device errors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "System RAM correctable/uncorrectable ECC errors. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 130,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Correctable",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_edac_correctable_errors_total{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_edac_uncorrectable_errors_total{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "B",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value #A": "Correctable",
+              "Value #B": "Uncorrectable"
+            },
+            "indexByName": {
+              "node": 0,
+              "controller": 1,
+              "Correctable": 2,
+              "Uncorrectable": 3
+            }
+          }
+        }
+      ],
+      "title": "Memory ECC errors (EDAC)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPU double-bit ECC, uncorrectable remapped rows, and row-remap failures. Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 This GPU",
+                    "url": "/d/gpu-health/x?var-node=${__data.fields.node}&var-gpu=${__data.fields.gpu}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 131,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "DBE vol",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_ECC_DBE_VOL_TOTAL{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "B",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\"} > 0",
+          "instant": true,
+          "refId": "C",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value #A": "DBE vol",
+              "Value #B": "Unc remap rows",
+              "Value #C": "Remap fail"
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "pci_bus_id": 2,
+              "DBE vol": 3,
+              "Unc remap rows": 4,
+              "Remap fail": 5
+            }
+          }
+        }
+      ],
+      "title": "GPU ECC (DBE) & remapped rows",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "title": "🖥️ Hardware Inventory (per selected node)",
+      "type": "row",
+      "id": 140
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "noValue": "N/A"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 30
+      },
+      "id": 141,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_os_info{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "legendFormat": "{{pretty_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "OS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "noValue": "N/A"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 4,
+        "y": 30
+      },
+      "id": 142,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_uname_info{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "legendFormat": "{{release}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Kernel",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "noValue": "No GPU"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 5,
+        "x": 8,
+        "y": 30
+      },
+      "id": 143,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(1, DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "{{modelName}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Model",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 2,
+        "x": 13,
+        "y": 30
+      },
+      "id": 144,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "GPUs",
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "unit": "decmbytes"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 15,
+        "y": 30
+      },
+      "id": 145,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\",node=~\"$node\"}+DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "legendFormat": "VRAM",
+          "refId": "A"
+        }
+      ],
+      "title": "VRAM/GPU",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 18,
+        "y": 30
+      },
+      "id": 146,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "node_memory_MemTotal_bytes{cluster=~\"$cluster\",node=~\"$node\"}",
+          "instant": true,
+          "legendFormat": "RAM",
+          "refId": "A"
+        }
+      ],
+      "title": "RAM",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 21,
+        "y": 30
+      },
+      "id": 147,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(node_cpu_seconds_total{cluster=~\"$cluster\",node=~\"$node\",mode=\"idle\"})",
+          "instant": true,
+          "legendFormat": "Threads",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Threads",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "title": "💻 CPU & Memory (topk busiest of selected nodes)",
+      "type": "row",
+      "id": 150
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-node CPU busy%. Shows the busiest nodes so outliers are visible even fleet-wide.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "percent",
+          "decimals": 1
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 34
+      },
+      "id": 151,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, 100 - (avg by(node)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",node=~\"$node\",mode=\"idle\"}[2m]))*100))",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(rate(node_cpu_seconds_total{cluster=~\"$cluster\",node=~\"$node\",mode=\"iowait\"}[2m]))*100",
+          "legendFormat": "fleet iowait %",
+          "refId": "B"
+        }
+      ],
+      "title": "CPU Utilization % — topk 15 busiest nodes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-node used memory (Total-Available). Top 15 consumers.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 34
+      },
+      "id": 152,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, node_memory_MemTotal_bytes{cluster=~\"$cluster\",node=~\"$node\"} - node_memory_MemAvailable_bytes{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory used — topk 15 nodes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-node 15-minute load average. Top 15.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "decimals": 2
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 34
+      },
+      "id": 153,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, node_load15{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "System load15 — topk 15 nodes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Instant per-node CPU busy%, highest first.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 41
+      },
+      "id": 154,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "CPU %",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, 100 - (avg by(node)(rate(node_cpu_seconds_total{cluster=~\"$cluster\",node=~\"$node\",mode=\"idle\"}[2m]))*100))",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "CPU %"
+            },
+            "indexByName": {
+              "node": 0,
+              "CPU %": 1
+            }
+          }
+        }
+      ],
+      "title": "Current top CPU % (selected nodes)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Instant per-node memory usage %, highest first.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 92
+              }
+            ]
+          },
+          "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 41
+      },
+      "id": 155,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Mem used %",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, (1 - node_memory_MemAvailable_bytes{cluster=~\"$cluster\",node=~\"$node\"} / node_memory_MemTotal_bytes{cluster=~\"$cluster\",node=~\"$node\"}) * 100)",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Mem used %"
+            },
+            "indexByName": {
+              "node": 0,
+              "Mem used %": 1
+            }
+          }
+        }
+      ],
+      "title": "Current top memory used % (selected nodes)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Instant per-node load15 per CPU thread, highest first.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 41
+      },
+      "id": 156,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Load15/core",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, node_load15{cluster=~\"$cluster\",node=~\"$node\"} / on(instance) group_left() count by(instance)(node_cpu_seconds_total{cluster=~\"$cluster\",node=~\"$node\",mode=\"idle\"}))",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Load15/core"
+            },
+            "indexByName": {
+              "node": 0,
+              "Load15/core": 1
+            }
+          }
+        }
+      ],
+      "title": "Current top load15/core (selected nodes)",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "title": "💾 Storage",
+      "type": "row",
+      "id": 160
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Top 20 fullest real filesystems across selected nodes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 1
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 0,
+        "y": 49
+      },
+      "id": 161,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, (1 - node_filesystem_avail_bytes{cluster=~\"$cluster\",node=~\"$node\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"} / node_filesystem_size_bytes{cluster=~\"$cluster\",node=~\"$node\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"}) * 100)",
+          "legendFormat": "{{node}} {{mountpoint}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Filesystem Usage % — top 20 fullest",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-device read/write throughput; top 15 series only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 10,
+        "y": 49
+      },
+      "id": 162,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_disk_read_bytes_total{cluster=~\"$cluster\",node=~\"$node\"}[2m]))",
+          "legendFormat": "{{node}}/{{device}} read",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_disk_written_bytes_total{cluster=~\"$cluster\",node=~\"$node\"}[2m]))",
+          "legendFormat": "{{node}}/{{device}} write",
+          "refId": "B"
+        }
+      ],
+      "title": "Disk throughput — topk 15 devices",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-device IOPS; top 15 series only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "iops"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 17,
+        "y": 49
+      },
+      "id": 163,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_disk_reads_completed_total{cluster=~\"$cluster\",node=~\"$node\"}[2m]))",
+          "legendFormat": "{{node}}/{{device}} reads",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_disk_writes_completed_total{cluster=~\"$cluster\",node=~\"$node\"}[2m]))",
+          "legendFormat": "{{node}}/{{device}} writes",
+          "refId": "B"
+        }
+      ],
+      "title": "Disk IOPS — topk 15 devices",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-device utilization (io_time rate). Top offenders.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "id": 164,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Busy %",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, rate(node_disk_io_time_seconds_total{cluster=~\"$cluster\",node=~\"$node\"}[2m]) * 100)",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Busy %"
+            },
+            "indexByName": {
+              "node": 0,
+              "device": 1,
+              "Busy %": 2
+            }
+          }
+        }
+      ],
+      "title": "Disk busy % — top devices",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Filesystems by inode usage %. Watch for inode exhaustion.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 95
+              }
+            ]
+          },
+          "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 57
+      },
+      "id": 165,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Inodes used %",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, (1 - node_filesystem_files_free{cluster=~\"$cluster\",node=~\"$node\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"} / node_filesystem_files{cluster=~\"$cluster\",node=~\"$node\",fstype!~\"tmpfs|overlay|squashfs|nsfs|autofs\"}) * 100)",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Inodes used %"
+            },
+            "indexByName": {
+              "node": 0,
+              "mountpoint": 1,
+              "device": 2,
+              "Inodes used %": 3
+            }
+          }
+        }
+      ],
+      "title": "Inode usage % — top filesystems",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "title": "🌐 Network — NCCL / TCP / NIC",
+      "type": "row",
+      "id": 170
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "orange",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 65
+      },
+      "id": 171,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(node_netstat_Tcp_CurrEstab{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "Max TCP Established",
+          "refId": "A"
+        }
+      ],
+      "title": "Max TCP Established",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 200
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 65
+      },
+      "id": 172,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(node_sockstat_TCP_inuse{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "Max TCP In Use",
+          "refId": "A"
+        }
+      ],
+      "title": "Max TCP In Use",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100000
+              },
+              {
+                "color": "red",
+                "value": 500000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 65
+      },
+      "id": 173,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(node_filefd_allocated{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "Max FDs",
+          "refId": "A"
+        }
+      ],
+      "title": "Max FDs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 9,
+        "y": 65
+      },
+      "id": 174,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_network_receive_bytes_total{cluster=~\"$cluster\",node=~\"$node\",device!~\"lo|docker.*|veth.*\"}[2m]))",
+          "instant": true,
+          "legendFormat": "Total NIC RX",
+          "refId": "A"
+        }
+      ],
+      "title": "Total NIC RX",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 12,
+        "y": 65
+      },
+      "id": 175,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(rate(node_network_transmit_bytes_total{cluster=~\"$cluster\",node=~\"$node\",device!~\"lo|docker.*|veth.*\"}[2m]))",
+          "instant": true,
+          "legendFormat": "Total NIC TX",
+          "refId": "A"
+        }
+      ],
+      "title": "Total NIC TX",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 15,
+        "y": 65
+      },
+      "id": 176,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(rate(node_netstat_Tcp_RetransSegs{cluster=~\"$cluster\",node=~\"$node\"}[2m]))",
+          "instant": true,
+          "legendFormat": "Max Retransmits/s",
+          "refId": "A"
+        }
+      ],
+      "title": "Max Retransmits/s",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 2000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 18,
+        "y": 65
+      },
+      "id": 177,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(node_sockstat_TCP_tw{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "Max TIME_WAIT",
+          "refId": "A"
+        }
+      ],
+      "title": "Max TIME_WAIT",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 21,
+        "y": 65
+      },
+      "id": 178,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min(time()-node_boot_time_seconds{cluster=~\"$cluster\",node=~\"$node\"})",
+          "instant": true,
+          "legendFormat": "Min Uptime",
+          "refId": "A"
+        }
+      ],
+      "title": "Min Uptime",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "NCCL opens N*(N-1) TCP connections; watch established sockets spike. Top 15 nodes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 68
+      },
+      "id": 179,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, node_netstat_Tcp_CurrEstab{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}} established",
+          "refId": "A"
+        }
+      ],
+      "title": "NCCL connection surge — topk 15 nodes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Top 15 nodes by RX bytes/s and TCP active opens/s.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 68
+      },
+      "id": 180,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, sum by(node)(rate(node_network_receive_bytes_total{cluster=~\"$cluster\",node=~\"$node\",device!~\"lo|docker.*|veth.*\"}[2m])))",
+          "legendFormat": "{{node}} RX",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_netstat_Tcp_ActiveOpens{cluster=~\"$cluster\",node=~\"$node\"}[1m]))",
+          "legendFormat": "{{node}} opens/s",
+          "refId": "B"
+        }
+      ],
+      "title": "NIC traffic + TCP opens/s — topk 15 nodes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Instant per-node TCP retransmit rate. High = network trouble.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            }
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Node deep dive",
+                    "url": "/d/nvis-node-deep-dive/x?var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 76
+      },
+      "id": 181,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Retransmits/s",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, rate(node_netstat_Tcp_RetransSegs{cluster=~\"$cluster\",node=~\"$node\"}[2m]))",
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "prometheus": true,
+              "instance": true,
+              "container": true,
+              "endpoint": true,
+              "namespace": true,
+              "pod": true,
+              "service": true,
+              "device_class": true,
+              "fstype": true
+            },
+            "renameByName": {
+              "Value": "Retransmits/s"
+            },
+            "indexByName": {
+              "node": 0,
+              "Retransmits/s": 1
+            }
+          }
+        }
+      ],
+      "title": "TCP retransmits/s — top nodes",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Per-port IB RX/TX bytes/s (x4 for data rate). Top 15 ports.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 76
+      },
+      "id": 182,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_infiniband_port_data_received_bytes_total{cluster=~\"$cluster\",node=~\"$node\"}[2m])*4)",
+          "legendFormat": "{{node}}/{{device}} RX",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, rate(node_infiniband_port_data_transmitted_bytes_total{cluster=~\"$cluster\",node=~\"$node\"}[2m])*4)",
+          "legendFormat": "{{node}}/{{device}} TX",
+          "refId": "B"
+        }
+      ],
+      "title": "InfiniBand throughput — topk 15 ports",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 83
+      },
+      "title": "📜 Correlated Logs (selected nodes)",
+      "type": "row",
+      "id": 190
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 84
+      },
+      "id": 191,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\",node=~\"$node\",job=\"syslog\"} |= \"kernel\" |~ \"(?i)(error|warn|gpu|nvrm|xid|nvlink|oom|fail|ecc)\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Kernel / GPU / XID / NVLink Errors",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 84
+      },
+      "id": 192,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "{cluster=~\"$cluster\",node=~\"$node\",job=\"syslog\"} |= \"slurm\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Slurm Events",
+      "type": "logs"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "node",
+    "hardware",
+    "storage",
+    "network",
+    "nvis"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "nvis-loki",
+          "value": "nvis-loki"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "label": "Prometheus",
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "name": "dgx_flavor",
+        "label": "DGX Flavor",
+        "type": "custom",
+        "query": "DGX SuperPOD",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "query": {
+          "query": "label_values(up{cluster=~\"$cluster\"}, node)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query",
+        "definition": "label_values(up{cluster=~\"$cluster\"}, node)",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "allValue": ".+",
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Node Deep Dive — Hardware, OS, Storage, Network",
+  "uid": "nvis-node-deep-dive",
+  "version": 10,
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Back to NVIS Home",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ]
+}

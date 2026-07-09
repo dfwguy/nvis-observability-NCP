@@ -1,0 +1,4 @@
+"ip","name","system_name","role","state","model","fw_version","sw_version","guid"
+"198.51.100.11","0011aabbccdd0001","leaf01","tor","active","SAMPLE-SW","00.0000.0000","N/A","0011aabbccdd0001"
+"198.51.100.12","0011aabbccdd0002","leaf02","tor","active","SAMPLE-SW","00.0000.0000","N/A","0011aabbccdd0002"
+"198.51.100.21","0011aabbccdd0011","spine01","core","active","SAMPLE-SW","00.0000.0000","N/A","0011aabbccdd0011"

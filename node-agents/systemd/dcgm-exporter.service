@@ -1,0 +1,18 @@
+[Unit]
+# Reference unit. install-node.sh renders the canonical copy, auto-detecting the
+# libdcgm.so.4 directory (LD_LIBRARY_PATH) for your arch. dcgm-exporter attaches
+# to the node's existing nv-hostengine on localhost:5555 rather than starting an
+# embedded one — keep nvidia-dcgm.service running.
+Description=NVIDIA DCGM Exporter (NVIS)
+After=network-online.target nvidia-dcgm.service
+Wants=network-online.target
+[Service]
+# Set to the dir containing libdcgm.so.4 (arm64: /usr/lib/aarch64-linux-gnu,
+# amd64: /usr/lib/x86_64-linux-gnu).
+Environment=LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu
+ExecStart=/usr/local/bin/dcgm-exporter --address=:9400 --remote-hostengine-info=localhost:5555 --collectors=/etc/dcgm-exporter/counters.csv
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target

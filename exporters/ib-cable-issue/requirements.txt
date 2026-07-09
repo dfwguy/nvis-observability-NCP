@@ -1,0 +1,2 @@
+# ib_cable_issue_exporter.py runtime deps.
+prometheus-client>=0.20

@@ -1,0 +1,85 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Grafana Alloy — CENTRAL ingest gateway for the NVIS appliance.
+//
+// This is the hub instance that runs in the central docker-compose stack. It:
+//   1. accepts Prometheus remote_write from every GPU-node Alloy agent (:9099)
+//      and fans it into Prometheus (which in turn remote_writes to
+//      VictoriaMetrics);
+//   2. accepts Loki pushes from node agents / apps (:9098) and forwards them
+//      to Loki;
+//   3. self-scrapes the central stack (VictoriaMetrics / Prometheus / Loki /
+//      Grafana / Alloy) so the platform monitors itself.
+//
+// The per-node agent template (DCGM / node_exporter / cgroup / syslog scrape +
+// relabel) lives with the node-agents component, NOT here.
+//
+// CLUSTER_NAME is read from the environment (set in docker-compose.yml). No IPs
+// or hostnames are hardcoded — central services are reached by compose DNS name.
+//
+// River syntax: one attribute per line; object fields inside [{...}] arrays are
+// comma-separated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+// ── metrics ingest gateway ───────────────────────────────────────────────────
+// Node agents point prometheus.remote_write at http://<OBSVM>:9099/api/v1/write
+prometheus.receive_http "gateway" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port    = 9099
+  }
+  forward_to = [prometheus.remote_write.local.receiver]
+}
+
+// Fan received + self-scraped metrics into the central Prometheus, which owns
+// the remote_write path to VictoriaMetrics.
+prometheus.remote_write "local" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// ── self-observability: scrape the central stack ─────────────────────────────
+prometheus.scrape "platform_self" {
+  targets = [
+    { __address__ = "victoriametrics:8428", component = "victoriametrics" },
+    { __address__ = "prometheus:9090",      component = "prometheus" },
+    { __address__ = "loki:3100",            component = "loki" },
+    { __address__ = "grafana:3000",         component = "grafana" },
+    { __address__ = "localhost:12345",      component = "alloy" },
+  ]
+  scrape_interval = "30s"
+  forward_to      = [prometheus.relabel.platform_self.receiver]
+}
+
+prometheus.relabel "platform_self" {
+  forward_to = [prometheus.remote_write.local.receiver]
+  rule {
+    target_label = "job"
+    replacement  = "nvis-platform"
+  }
+  rule {
+    target_label = "cluster"
+    replacement  = coalesce(sys.env("CLUSTER_NAME"), "dgx-superpod")
+  }
+}
+
+// ── logs ingest gateway ──────────────────────────────────────────────────────
+// Node agents point loki.write at http://<OBSVM>:9098/loki/api/v1/push
+loki.source.api "gateway" {
+  http {
+    listen_address = "0.0.0.0"
+    listen_port    = 9098
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

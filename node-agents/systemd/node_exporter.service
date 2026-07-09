@@ -1,0 +1,22 @@
+[Unit]
+# Reference unit. install-node.sh renders the canonical copy with TEXTFILE_DIR
+# substituted; edit that env var rather than this file for a rollout.
+Description=Prometheus node_exporter (NVIS)
+After=network-online.target
+Wants=network-online.target
+[Service]
+ExecStart=/usr/local/bin/node_exporter \
+  --web.listen-address=:9100 \
+  --collector.textfile.directory=/var/lib/node_exporter/textfile_collector \
+  --collector.cpu.info \
+  --collector.netdev \
+  --collector.netstat \
+  --collector.diskstats \
+  --collector.filesystem \
+  --collector.meminfo \
+  --collector.systemd
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target

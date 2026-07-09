@@ -1,0 +1,22 @@
+# never commit rendered site config or secrets
+.env
+config.yaml
+config.local.yaml
+secrets/
+*.secret
+*.key
+/tmp/
+__pycache__/
+*.pyc
+CREDS-*.md
+
+# node-agents runtime artifacts (site inventory / rollout output)
+node-agents/nodes.txt
+node-agents/rollout-results.tsv
+
+# terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/.terraform.lock.hcl

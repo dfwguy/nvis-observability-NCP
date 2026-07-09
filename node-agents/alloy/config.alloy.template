@@ -1,0 +1,164 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// NVIS GPU-node Alloy agent — canonical template
+//
+// install-node.sh renders this config directly (substituting env at run time);
+// this file is the human-readable reference / manual-deploy copy. Replace the
+// placeholders before use, or let install-node.sh do it:
+//
+//   Placeholder        Env var           Meaning
+//   ──────────────     ───────────────   ────────────────────────────────────
+//   <RW_URL>           RW_URL            remote_write endpoint (relay or ObsVM)
+//   <LOKI_PUSH_URL>    LOKI_PUSH_URL     Loki push endpoint  (relay or ObsVM)
+//   <CLUSTER_NAME>     CLUSTER_NAME      Grafana `cluster` label
+//   <DGX_FLAVOR>       DGX_FLAVOR        hardware flavor label (dgx-superpod/...)
+//   <NODE_HOSTNAME>    hostname -s       per-node instance label
+//
+// Target state: scrape localhost:9400 (DCGM, honor_timestamps=false) + :9100 +
+// :9306 (cgroup) + self :12345 ; tail syslog/kernel/dcgm/slurm + journal ;
+// remote_write + loki push upstream. Nodes that cannot reach the ObsVM directly
+// point <RW_URL>/<LOKI_PUSH_URL> at the head-node stream relay (see head-node/).
+// ─────────────────────────────────────────────────────────────────────────────
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+prometheus.remote_write "obsvm" {
+  endpoint {
+    url = "<RW_URL>"
+  }
+  external_labels = {
+    cluster    = "<CLUSTER_NAME>",
+    dgx_flavor = "<DGX_FLAVOR>",
+  }
+}
+
+prometheus.scrape "dcgm" {
+  targets          = [{ __address__ = "localhost:9400" }]
+  scrape_interval  = "15s"
+  honor_timestamps = false
+  forward_to       = [prometheus.relabel.dcgm.receiver]
+}
+prometheus.relabel "dcgm" {
+  forward_to = [prometheus.remote_write.obsvm.receiver]
+  rule {
+    target_label = "job"
+    replacement  = "dcgm-exporter"
+  }
+  rule {
+    target_label = "instance"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+  rule {
+    target_label = "node"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+}
+
+prometheus.scrape "node_exporter" {
+  targets         = [{ __address__ = "localhost:9100" }]
+  scrape_interval = "15s"
+  forward_to      = [prometheus.relabel.node_exporter.receiver]
+}
+prometheus.relabel "node_exporter" {
+  forward_to = [prometheus.remote_write.obsvm.receiver]
+  rule {
+    target_label = "job"
+    replacement  = "node-exporter"
+  }
+  rule {
+    target_label = "instance"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+  rule {
+    target_label = "node"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+}
+
+prometheus.scrape "cgroup_exporter" {
+  targets         = [{ __address__ = "localhost:9306" }]
+  scrape_interval = "15s"
+  forward_to      = [prometheus.relabel.cgroup_exporter.receiver]
+}
+prometheus.relabel "cgroup_exporter" {
+  forward_to = [prometheus.remote_write.obsvm.receiver]
+  rule {
+    target_label = "job"
+    replacement  = "cgroup-exporter"
+  }
+  rule {
+    target_label = "instance"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+  rule {
+    target_label = "node"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+}
+
+prometheus.scrape "alloy" {
+  targets         = [{ __address__ = "localhost:12345" }]
+  scrape_interval = "15s"
+  forward_to      = [prometheus.relabel.alloy.receiver]
+}
+prometheus.relabel "alloy" {
+  forward_to = [prometheus.remote_write.obsvm.receiver]
+  rule {
+    target_label = "job"
+    replacement  = "alloy"
+  }
+  rule {
+    target_label = "instance"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+  rule {
+    target_label = "node"
+    replacement  = "<NODE_HOSTNAME>"
+  }
+}
+
+loki.write "obsvm" {
+  endpoint {
+    url = "<LOKI_PUSH_URL>"
+  }
+  external_labels = {
+    cluster    = "<CLUSTER_NAME>",
+    dgx_flavor = "<DGX_FLAVOR>",
+    node       = "<NODE_HOSTNAME>",
+  }
+}
+
+local.file_match "logfiles" {
+  path_targets = [
+    { __path__ = "/var/log/syslog",           job = "syslog", instance = "<NODE_HOSTNAME>" },
+    { __path__ = "/var/log/kern.log",          job = "kernel", instance = "<NODE_HOSTNAME>" },
+    { __path__ = "/var/log/nv-hostengine.log", job = "dcgm",   instance = "<NODE_HOSTNAME>" },
+    { __path__ = "/var/log/slurm*",            job = "slurm",  instance = "<NODE_HOSTNAME>" },
+  ]
+}
+loki.source.file "logfiles" {
+  targets    = local.file_match.logfiles.targets
+  forward_to = [loki.write.obsvm.receiver]
+}
+
+loki.source.journal "journal" {
+  forward_to    = [loki.write.obsvm.receiver]
+  relabel_rules = loki.relabel.journal.rules
+  labels = {
+    job      = "journal",
+    instance = "<NODE_HOSTNAME>",
+  }
+}
+loki.relabel "journal" {
+  forward_to = []
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
+  }
+  rule {
+    source_labels = ["__journal_priority_keyword"]
+    target_label  = "level"
+  }
+}

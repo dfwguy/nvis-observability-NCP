@@ -1,0 +1,128 @@
+# =============================================================================
+# NVIS Observability Appliance — CENTRAL STACK
+# =============================================================================
+# The single-host observability control plane for a DGX SuperPOD cluster:
+#
+#   victoriametrics  long-term metrics TSDB (Prometheus-compatible query API)
+#   prometheus       short-term scrape + remote_write fan-in -> VictoriaMetrics
+#   loki             log store
+#   grafana          dashboards (VictoriaMetrics = default datasource)
+#   alloy            ingest gateway: node agents remote_write metrics + push
+#                    logs here; also self-scrapes the central stack for health
+#
+# Per-node agents (DCGM / node_exporter / cgroup / syslog) and the site
+# exporters (BCM, Slurm, UFM, Redfish, IB fabric, job/benchmark) live in their
+# own components and point at this host. Prometheus scrapes those exporters via
+# the docker host-gateway; see prometheus/prometheus.yml.
+#
+# Config is env-driven — copy .env.example to .env and fill it in. NO secrets
+# are ever committed; .env is gitignored.
+#
+#   docker compose --env-file .env up -d
+# =============================================================================
+
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.103.0
+    container_name: nvis-victoriametrics
+    restart: unless-stopped
+    command:
+      - --storageDataPath=/vm-data
+      # Long-term retention (months). Overridable via DATA_RETENTION_MONTHS.
+      - --retentionPeriod=${DATA_RETENTION_MONTHS:-12}
+      # Go read-only before the disk fills instead of taking the host down.
+      - --storage.minFreeDiskSpaceBytes=10GB
+      - --httpListenAddr=:8428
+    volumes:
+      - vm-data:/vm-data
+    ports:
+      - "8428:8428"
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: nvis-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      # Keep Prometheus lean — it is the short-term buffer; VictoriaMetrics is
+      # the system of record. Long-range history is served from VM.
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-remote-write-receiver
+      - --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+    # Exporters run with network_mode: host on this same box; reach them at the
+    # docker host-gateway (see prometheus.yml -> host.docker.internal targets).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - prom-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./certs:/etc/prometheus/certs:ro
+    depends_on:
+      - victoriametrics
+
+  loki:
+    image: grafana/loki:3.1.0
+    container_name: nvis-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: nvis-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
+      - GF_SECURITY_CONTENT_SECURITY_POLICY=false
+      # Surfaced for dashboard defaults / footer branding.
+      - NVIS_CLUSTER_NAME=${CLUSTER_NAME:-dgx-superpod}
+      - NVIS_DGX_FLAVOR=${DGX_FLAVOR:-B300}
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - victoriametrics
+      - prometheus
+      - loki
+
+  alloy:
+    image: grafana/alloy:v1.5.1
+    container_name: nvis-alloy
+    restart: unless-stopped
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+    environment:
+      - CLUSTER_NAME=${CLUSTER_NAME:-dgx-superpod}
+    ports:
+      - "12345:12345"   # Alloy UI / self-metrics
+      - "9099:9099"     # Prometheus remote_write ingest gateway (node agents)
+      - "9098:9098"     # Loki push ingest gateway (node agents / apps)
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  vm-data:
+  prom-data:
+  loki-data:
+  grafana-data:
+  alloy-data:

@@ -1,0 +1,133 @@
+# =============================================================================
+# Prometheus — short-term scrape + remote_write fan-in for the NVIS appliance.
+# Prometheus scrapes the local exporters, keeps a short retention buffer, and
+# remote_writes everything to VictoriaMetrics (the long-term system of record).
+#
+# Exporters run with `network_mode: host` on this same box, so Prometheus (on
+# the compose bridge network) reaches them through the docker host-gateway alias
+# `host.docker.internal` (mapped in docker-compose.yml via extra_hosts). No site
+# IPs or hostnames appear here.
+#
+# `honor_labels: true` on every exporter job: the exporters stamp their own
+# `cluster`, `job`, `node`/`instance` labels, and Prometheus must not overwrite
+# them. Turn any exporter you do not run into a comment.
+#
+# For a fully env-templated variant (CLUSTER_NAME as an external label, a
+# configurable exporter host, etc.) the installer renders prometheus.yml.tmpl.
+# =============================================================================
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # --- self ------------------------------------------------------------------
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # --- cluster / head-node exporters -----------------------------------------
+  # BCM (cluster manager / head node): node inventory, power, health.
+  - job_name: bcm-exporter
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9401"]
+
+  # Slurm job exporter — squeue (live) + sacct (history).
+  - job_name: slurm-job-exporter
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9402"]
+
+  # Redfish (BMC) — chassis power, thermals, fans, hardware events.
+  - job_name: redfish-exporter
+    scrape_interval: 60s
+    scrape_timeout: 45s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9104"]
+
+  # --- InfiniBand / network fabric exporters ---------------------------------
+  # UFM inventory / SM state.
+  - job_name: ufm-exporter
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9103"]
+
+  # UFM telemetry — per-port counters (BER, symbol/link errors, xmit/rcv).
+  - job_name: ufm-telemetry-exporter
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9105"]
+
+  # IB LLDP neighbour / topology discovery.
+  - job_name: ib-lldp-exporter
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9114"]
+
+  # IB cable-issue exporter — flapping / degraded links.
+  - job_name: ib-cable-issue-exporter
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9116"]
+
+  # IB identity / alias mapping (GUID -> friendly name / blast index).
+  - job_name: ib-identity-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9118"]
+
+  # IB switch audit — firmware / config drift.
+  - job_name: ib-switch-audit-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9117"]
+
+  # Cable-audit textfile exporter — periodic miscabling scan results.
+  - job_name: cable-audit-textfile-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9107"]
+
+  # --- job / benchmark artifact exporters ------------------------------------
+  # NCCL artifact exporter — per-job NCCL config/topology/inspector parse.
+  - job_name: nccl-artifact-exporter
+    scrape_interval: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9115"]
+
+  # LLM-benchmark job exporter — per-Slurm-job step timing / status.
+  - job_name: llmb-job-exporter
+    scrape_interval: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["host.docker.internal:9119"]
+
+  # --- GPU node agents -------------------------------------------------------
+  # DCGM / node_exporter / cgroup metrics are push-based: Grafana Alloy on each
+  # GPU node remote_writes to the central Alloy gateway (:9099) or straight to
+  # Prometheus (:9090). No static pull targets needed here.
+
+remote_write:
+  # VictoriaMetrics is the long-term system of record.
+  - url: http://victoriametrics:8428/api/v1/write
+
+  # BCM Certificate Authority — uncomment and drop the CA at ./certs/bcm-ca.pem
+  # to scrape TLS-protected BCM-managed targets.
+  #   tls_config:
+  #     ca_file: /etc/prometheus/certs/bcm-ca.pem

@@ -1,0 +1,106 @@
+# NVIS Observability — BMC / BCM / NetQ exporter compose fragment
+# ===============================================================
+# Three central-poller exporters (no per-node agent):
+#   redfish-bmc-exporter : per-node BMC Redfish  temps / power / fans / SEL   :9104
+#   bcm-exporter         : Base Command Manager inventory over SSH             :9401
+#   netq-exporter        : NVIDIA Cumulus NetQ fabric API (OPTIONAL)           :9109
+#
+# Merge into the root docker-compose via `-f docker-compose.yml -f
+# exporters/compose.bmc-bcm-netq.yml`, or paste these services into the main
+# compose. Paths are relative to the REPO ROOT (run compose from there).
+#
+# ALL site values come from .env — see exporters/.env.bmc-bcm-netq.example.
+# Secrets (BMC_PASSWORD, NETQ_TOKEN) live in .env only (gitignored) and are
+# passed to the containers as environment variables — never baked into images.
+# The real BMC target list lives in ./secrets/ (gitignored), NOT in the repo.
+
+services:
+  redfish-bmc-exporter:
+    image: python:3.11-slim
+    container_name: nvis-redfish-bmc-exporter
+    restart: unless-stopped
+    network_mode: host           # exposes :9104 on the observability host
+    environment:
+      # Path to the target list INSIDE the container (mounted below).
+      - BMC_TARGETS=/targets/bmc-targets.csv
+      # OR provide an inline list instead of a file:
+      # - BMC_HOSTS=${BMC_HOSTS:-}
+      - BMC_USER=${BMC_USER:-root}
+      - BMC_PASSWORD=${BMC_PASSWORD:?set BMC_PASSWORD in .env}
+      - BMC_CONCURRENCY=${BMC_CONCURRENCY:-16}
+      - SENSOR_CONCURRENCY=${BMC_SENSOR_CONCURRENCY:-8}
+      - CLUSTER_NAME=${CLUSTER_NAME:-nvis-cluster}
+      - DGX_FLAVOR=${DGX_FLAVOR:-}
+      - VERIFY_SSL=${BMC_VERIFY_SSL:-false}
+      - SCRAPE_INTERVAL=${BMC_SCRAPE_INTERVAL:-300}
+      - BMC_TIMEOUT=${BMC_TIMEOUT:-12}
+      - FW_DISABLED=${BMC_FW_DISABLED:-true}
+      - SEL_DISABLED=${BMC_SEL_DISABLED:-false}
+      - SEL_LOG_PATH=/var/log/nvis/redfish-sel.json
+      - PORT=9104
+    volumes:
+      - ./exporters/redfish-bmc/redfish_exporter.py:/app/redfish_exporter.py:ro
+      # Real inventory lives in ./secrets (gitignored). Point it at your CSV.
+      - ./secrets/bmc-targets.csv:/targets/bmc-targets.csv:ro
+      - redfish-sel:/var/log/nvis
+    command: ["python3", "/app/redfish_exporter.py"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9104/-/healthy')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  bcm-exporter:
+    image: python:3.11-slim
+    container_name: nvis-bcm-exporter
+    restart: unless-stopped
+    network_mode: host           # exposes :9401 on the observability host
+    environment:
+      - BCM_HOST=${BCM_HOST:?set BCM_HOST in .env}
+      - BCM_USER=${BCM_USER:-root}
+      # BCM_JUMP: jump host if BCM is not directly reachable (e.g. user@jumphost)
+      - BCM_JUMP=${BCM_JUMP:-}
+      - BCM_SSH_KEY=/root/.ssh/id_ed25519
+      - CLUSTER_NAME=${CLUSTER_NAME:-nvis-cluster}
+      - SCRAPE_INTERVAL=${BCM_SCRAPE_INTERVAL:-60}
+      - PORT=9401
+    volumes:
+      - ~/.ssh:/root/.ssh:ro     # SSH key only — no passwords on disk
+      - ./exporters/bcm/bcm_exporter.py:/app/bcm_exporter.py:ro
+    command: >
+      bash -c "apt-get update -qq && apt-get install -y -qq openssh-client &&
+               python3 /app/bcm_exporter.py"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9401/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # OPTIONAL — enable only for clusters whose Ethernet/Cumulus fabric runs NetQ.
+  netq-exporter:
+    image: python:3.11-slim
+    container_name: nvis-netq-exporter
+    restart: unless-stopped
+    network_mode: host           # exposes :9109 on the observability host
+    environment:
+      - NETQ_ENDPOINT=${NETQ_ENDPOINT:?set NETQ_ENDPOINT in .env}
+      - NETQ_TOKEN=${NETQ_TOKEN:-}
+      - NETQ_USER=${NETQ_USER:-}
+      - NETQ_PASS=${NETQ_PASS:-}
+      - CLUSTER_NAME=${CLUSTER_NAME:-nvis-cluster}
+      - VERIFY_SSL=${NETQ_VERIFY_SSL:-true}
+      - SCRAPE_INTERVAL=${NETQ_SCRAPE_INTERVAL:-30}
+      - PORT=9109
+    volumes:
+      - ./exporters/netq:/app:ro
+    command: >
+      bash -c "pip install --no-cache-dir -r /app/requirements.txt &&
+               python3 /app/netq_exporter.py"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9109/-/healthy')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redfish-sel:

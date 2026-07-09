@@ -1,0 +1,9 @@
+[Unit]
+# Oneshot driven by nvis-nvlink-collector.timer. Writes su1_nvlink.prom into the
+# node_exporter textfile dir. install-node.sh renders this pair per node.
+Description=NVIS GPU NVLink textfile collector
+After=node_exporter.service
+[Service]
+Type=oneshot
+Environment=TEXTFILE_DIR=/var/lib/node_exporter/textfile_collector
+ExecStart=/usr/local/bin/host_nvlink_collector.sh

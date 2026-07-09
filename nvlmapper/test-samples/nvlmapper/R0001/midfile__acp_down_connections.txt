@@ -1,0 +1,4 @@
+# Synthetic NVLMapper midfile for parser tests — NOT real cluster data.
+# Format: <tray> acp<N> connects to CC<n>_C<n>_Lane_<nn>   (one DOWN lane per destination)
+SW1 acp53 connects to CC1_C5_Lane_15
+SW3 acp12 connects to CC7_C2_Lane_03

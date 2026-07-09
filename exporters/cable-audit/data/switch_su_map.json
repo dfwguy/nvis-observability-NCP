@@ -1,0 +1,20 @@
+{
+  "leaf01": {
+    "su": "SU1",
+    "role": "leaf",
+    "rack": "R01",
+    "unit": "15"
+  },
+  "leaf02": {
+    "su": "SU1",
+    "role": "leaf",
+    "rack": "R01",
+    "unit": "16"
+  },
+  "spine01": {
+    "su": "SU1",
+    "role": "spine",
+    "rack": "R02",
+    "unit": "10"
+  }
+}

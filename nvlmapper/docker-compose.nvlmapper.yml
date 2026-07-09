@@ -1,0 +1,55 @@
+# Compose fragment: NVLMapper (switch-side intra-rack NVLink down-lane) exporter.
+#
+# Merge it into the main stack from the repo root:
+#   docker compose -f docker-compose.yml -f nvlmapper/docker-compose.nvlmapper.yml up -d
+#
+# Enable it by setting NVLMAPPER_ENABLED=true in .env (the installer asks). While disabled the
+# service stays inert (idle) so the stack composes cleanly on sites without NVLink racks.
+#
+# The vendor NVLMapper binary is NOT shipped in this repo. To let this container run the sweep
+# (NVLMAPPER_RUN_BINARY=true), drop the binary into nvlmapper/bin/ (gitignored) and mount it via
+# NVLMAPPER_BIN_DIR. Otherwise leave RUN_BINARY=false and land pre-produced midfiles under
+# NVLMAPPER_OUTPUT_DIR/nvlmapper/<RACK>/midfile__acp_down_connections.txt from an out-of-band job.
+#
+# Prometheus scrape (add to prometheus/prometheus.yml):
+#   - job_name: nvlmapper-exporter
+#     scrape_interval: 60s
+#     static_configs: [{ targets: ['localhost:9120'] }]
+
+services:
+  nvlmapper-exporter:
+    image: python:3.11-slim
+    container_name: nvis-nvlmapper-exporter
+    restart: unless-stopped
+    network_mode: host          # needs routable access to per-rack NVSwitch tray BMCs
+    environment:
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      - NVLINK_FLAVOR=${NVLINK_FLAVOR:-nvl72}
+      - NVLMAPPER_ENABLED=${NVLMAPPER_ENABLED:-false}
+      - NVLMAPPER_CONFIG=/nvlmapper/config.yml
+      - NVLMAPPER_OUTPUT_ROOT=/data
+      - NVLMAPPER_BIN=/opt/nvlmapper/${NVLMAPPER_BIN_NAME:-nvlmapper}
+      - NVLMAPPER_RUN_BINARY=${NVLMAPPER_RUN_BINARY:-false}
+      - NVLMAPPER_SWEEP_SCOPE=${NVLMAPPER_SWEEP_SCOPE:-rack}
+      # Fallback tray-BMC creds (per-tray values in config.yml win). Password is a secret and
+      # is injected from .env only — never bake it into an image or commit it.
+      - NVLMAPPER_BMC_USER=${NVLMAPPER_BMC_USER:-}
+      - NVLMAPPER_BMC_PASSWORD=${NVLMAPPER_BMC_PASSWORD:-}
+      - NVLMAPPER_PORT=${NVLMAPPER_PORT:-9120}
+      - NVLMAPPER_SCRAPE_INTERVAL=${NVLMAPPER_SCRAPE_INTERVAL:-60}
+      - NVLMAPPER_RUN_INTERVAL=${NVLMAPPER_RUN_INTERVAL:-900}
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./nvlmapper:/nvlmapper:ro                                   # exporter + parser + runner + config.yml
+      - ${NVLMAPPER_OUTPUT_DIR:-./nvlmapper/output}:/data          # midfiles land here (rw when sweeping)
+      - ${NVLMAPPER_BIN_DIR:-./nvlmapper/bin}:/opt/nvlmapper:ro    # vendor binary (gitignored, mount only)
+    command: >
+      bash -c "test \"$${NVLMAPPER_ENABLED}\" = \"true\" ||
+                 { echo 'nvlmapper disabled — set NVLMAPPER_ENABLED=true in .env to activate'; sleep infinity; };
+               pip install --quiet --no-input pyyaml >/dev/null 2>&1 || true;
+               python3 /nvlmapper/nvlmapper_exporter.py"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9120/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

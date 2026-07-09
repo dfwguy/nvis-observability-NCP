@@ -1,0 +1,107 @@
+# =============================================================================
+# Prometheus config TEMPLATE — rendered by the installer with `envsubst`.
+#   envsubst < prometheus/prometheus.yml.tmpl > prometheus/prometheus.yml
+#
+# Every ${VAR} below is sourced from .env (see .env.example). This is the
+# env-templated form of prometheus.yml: the cluster label and the exporter host
+# become site values the interview installer collects, so no IP or hostname is
+# ever hardcoded.
+#
+# Variables:
+#   CLUSTER_NAME          -> external label stamped on all locally-scraped series
+#   PROM_SCRAPE_INTERVAL  -> global scrape interval (default 15s)
+#   EXPORTER_HOST         -> host:port base for the site exporters
+#                            (default host.docker.internal — the docker host)
+#   VM_REMOTE_WRITE_URL   -> VictoriaMetrics remote_write endpoint
+# =============================================================================
+global:
+  scrape_interval: ${PROM_SCRAPE_INTERVAL}
+  scrape_timeout: 10s
+  external_labels:
+    cluster: "${CLUSTER_NAME}"
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: bcm-exporter
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9401"]
+
+  - job_name: slurm-job-exporter
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9402"]
+
+  - job_name: redfish-exporter
+    scrape_interval: 60s
+    scrape_timeout: 45s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9104"]
+
+  - job_name: ufm-exporter
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9103"]
+
+  - job_name: ufm-telemetry-exporter
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9105"]
+
+  - job_name: ib-lldp-exporter
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9114"]
+
+  - job_name: ib-cable-issue-exporter
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9116"]
+
+  - job_name: ib-identity-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9118"]
+
+  - job_name: ib-switch-audit-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9117"]
+
+  - job_name: cable-audit-textfile-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9107"]
+
+  - job_name: nccl-artifact-exporter
+    scrape_interval: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9115"]
+
+  - job_name: llmb-job-exporter
+    scrape_interval: 30s
+    honor_labels: true
+    static_configs:
+      - targets: ["${EXPORTER_HOST}:9119"]
+
+remote_write:
+  - url: ${VM_REMOTE_WRITE_URL}

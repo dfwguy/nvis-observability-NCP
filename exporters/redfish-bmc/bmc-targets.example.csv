@@ -1,0 +1,19 @@
+# NVIS Redfish BMC exporter — target list (EXAMPLE / placeholder)
+#
+# Copy this file to the path you point BMC_TARGETS at (e.g. bmc-targets.csv)
+# and replace the placeholder rows with your real BMC inventory.
+# NEVER commit a filled-in copy — the deployed file lives outside the repo
+# (the installer writes it to a gitignored location).
+#
+# Accepted line formats (comma or whitespace separated):
+#   node,ip            friendly node name + BMC IP/host   (recommended)
+#   ip                 bare BMC IP/host  (node label = ip)
+#   ip/cidr            a whole CIDR range, expanded (node label = ip)
+#
+# A leading "node,ip" header row and blank / '#' comment lines are ignored.
+node,ip
+node001,<BMC_IP_1>
+node002,<BMC_IP_2>
+node003,<BMC_IP_3>
+# ...one row per node. Or point BMC_TARGETS at a CIDR instead, e.g.:
+# <BMC_MGMT_CIDR>          # a /24 or /28 of BMC IPs, expanded automatically

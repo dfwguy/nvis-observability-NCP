@@ -1,0 +1,4 @@
+ip,audit_timestamp_utc,ufm_guid,ufm_role,ufm_state,ufm_system_name,expected_hostname,reported_hostname,hostname_status,ssh_status,resolution_status,ufm_vs_switch,ufm_description
+198.51.100.11,2026-01-01T00:00:00Z,0011aabbccdd0001,tor,active,leaf01,leaf01,leaf01,MATCH,CONNECTED,RESOLVED,MATCH,SAMPLE-SW
+198.51.100.12,2026-01-01T00:00:00Z,0011aabbccdd0002,tor,active,leaf02,leaf02,leaf02,MATCH,CONNECTED,RESOLVED,MATCH,SAMPLE-SW
+198.51.100.21,2026-01-01T00:00:00Z,0011aabbccdd0011,core,active,spine01,spine01,spine01-badname,MISMATCH,CONNECTED,RESOLVED,MISMATCH,SAMPLE-SW

@@ -1,0 +1,43 @@
+# nvlmapper/config.yml.template — NVLMapper site configuration.
+#
+# Copy to nvlmapper/config.yml (GITIGNORED — never commit it) and fill in your values.
+# NVLMapper is the vendor-supplied, switch-side intra-rack NVLink down-lane mapper. It logs
+# into each NVLink rack's NVSwitch tray BMCs, walks the ACP port map, and writes one
+# midfile__acp_down_connections.txt per rack listing which CCx_Cy_Lane_z NVLink lanes are DOWN.
+#
+# This file only tells run_nvlmapper.sh WHICH racks / tray BMCs to sweep and WITH WHAT
+# credentials. The vendor binary itself is NOT in this repo — point NVLMAPPER_BIN at it.
+#
+# ABSOLUTELY NO real IPs, hostnames, usernames, or passwords belong in this .template.
+# Put those ONLY in the rendered config.yml, and lock its permissions:  chmod 0600 config.yml
+
+# ---- cluster / product identity (become Prometheus labels) --------------------------------
+# cluster -> cluster= label on every metric (usually the same as CLUSTER_NAME in .env).
+# flavor  -> flavor=  label (NVLINK_FLAVOR in .env), e.g. the NVLink fabric generation.
+cluster: "REPLACE_WITH_CLUSTER_NAME"
+flavor:  "REPLACE_WITH_NVLINK_FLAVOR"        # e.g. nvl72
+
+# ---- default tray-BMC credentials ---------------------------------------------------------
+# Used for any tray that does not override them below. Prefer injecting the password at run
+# time via NVLMAPPER_BMC_PASSWORD in .env (kept out of git) over writing it here; if you must
+# store it here, remember config.yml is gitignored and should be chmod 0600.
+bmc_defaults:
+  username: "REPLACE_WITH_BMC_ADMIN_USER"
+  # password: "REPLACE_WITH_BMC_ADMIN_PASSWORD"   # optional; else set NVLMAPPER_BMC_PASSWORD
+
+# ---- per-rack NVSwitch tray BMCs ----------------------------------------------------------
+# One block per NVLink rack. The `rack` key becomes the Prometheus rack= label and the output
+# subdirectory (parse_nvlmapper also accepts an R#### subdir if the binary writes its own).
+# Add every NVSwitch tray BMC in the rack under `trays`.
+racks:
+  - rack: "REPLACE_WITH_RACK_ID"             # e.g. R1001
+    trays:
+      - name: "SW1"                          # NVSwitch tray label -> tray= label
+        bmc_host: "REPLACE_WITH_TRAY1_BMC_IP"
+        # username / password here OVERRIDE bmc_defaults for this tray only (optional)
+      - name: "SW2"
+        bmc_host: "REPLACE_WITH_TRAY2_BMC_IP"
+  # - rack: "REPLACE_WITH_RACK_ID_2"
+  #   trays:
+  #     - name: "SW1"
+  #       bmc_host: "REPLACE_WITH_TRAY_BMC_IP"

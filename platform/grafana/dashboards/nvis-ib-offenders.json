@@ -1,0 +1,1303 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Unified daily-triage: slow speed (!=NDR/XDR), degraded width (<4x), down ports, and a live composite worst-connection score. Host + UFM views LIVE; SU grouping + eff_ber term gated on join/telemetry.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-net-home/nvis-network-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Network Observability Home",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "type": "dashboards",
+      "title": "Network Boards",
+      "tags": [
+        "network"
+      ],
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "title": "Worst-Connection Severity",
+      "type": "row"
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "title": "Slow Links (< NDR/XDR)",
+      "description": "Active ports negotiated below NDR/XDR (Unknown excluded = down/unprovisioned, not slow).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "title": "🔎 Which links? → Slow-links detail (placement + peer switch)",
+              "url": "/d/nvis-ib-offenders?viewPanel=9&var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "✓ Healthy",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "✓ None",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(ufm_port_up{cluster=~\"$cluster\",speed=~\"SDR|DDR|QDR|FDR|EDR|HDR\"} == 1) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "title": "Degraded Width (<4x)",
+      "description": "Active ports with a dead lane in the OSFP cage (1x/2x/3x).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "title": "🔎 Which links? → Degraded-width detail (placement + peer switch)",
+              "url": "/d/nvis-ib-offenders?viewPanel=10&var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "✓ Healthy",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "✓ None",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(ufm_port_up{cluster=~\"$cluster\",width=~\"1x|2x|3x\"} == 1) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "title": "Down Ports",
+      "description": "CABLED ports currently DOWN — port previously negotiated a rate but is now up==0. Excludes speed=Unknown (never-linked / planned-uncabled spine+leaf uplinks), which are NOT outages. LIVE offenders only.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "title": "🔎 Which switches? → Down-ports by switch",
+              "url": "/d/nvis-ib-offenders?viewPanel=11&var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "✓ Healthy",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "✓ None",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(ufm_port_up{cluster=~\"$cluster\",speed!=\"Unknown\"} == 0) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "title": "Crit Host-Links (score>0.5)",
+      "description": "Host links whose live composite score exceeds 0.5 (see headline table).",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "title": "🔎 Which host-links? → Worst-connections detail (SU/rack/leaf)",
+              "url": "/d/nvis-ib-offenders?viewPanel=7&var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            },
+            {
+              "title": "📈 Signal / BER (D3)",
+              "url": "/d/nvis-ib-signal/ber-signal?var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "✓ Healthy",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "✓ None",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count(ib_link_health_score{cluster=~\"$cluster\"} > 0.5) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 6,
+      "title": "Composite Worst-Connection Score (headline)",
+      "type": "row"
+    },
+    {
+      "type": "table",
+      "id": 7,
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "title": "Worst Host-Connections — topk(40) ib_link_health_score [LIVE-HOST]",
+      "description": "Live ib_link_health_score recording rule (0-100 badness, higher=worse): composite of symbol-err, link-flaps, discards & xmit-wait. Switch-side eff_ber term lands with UFM Telemetry (P3). Row → D12 blast-radius.",
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Health Score",
+            "desc": true
+          }
+        ],
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto"
+          },
+          "noValue": "✓ None — fabric healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Health Score"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0.5
+                    },
+                    {
+                      "color": "red",
+                      "value": 10
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Host"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Blast radius (D12)",
+                    "url": "/d/nvis-ib-blast-radius/blast-radius?var-cluster=$cluster&var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  },
+                  {
+                    "title": "📈 Signal (D3)",
+                    "url": "/d/nvis-ib-signal/ber-signal?var-cluster=$cluster&var-node=${__data.fields.node}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "leaf"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Connected Leaf (peer sw)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "leaf_port"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Leaf Port"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "su"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SU"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rack"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rack"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "device"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "HCA"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "topk(40, (ib_link_health_score{cluster=~\"$cluster\",node=~\"$node\"} > 0) * on(node,device) group_left(leaf,leaf_port,su,rack) ib_host_rail_leaf or (ib_link_health_score{cluster=~\"$cluster\",node=~\"$node\"} > 0) unless on(node,device) ib_host_rail_leaf)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 8,
+      "title": "Slow Speed · Degraded Width · Down (UFM port view)",
+      "type": "row"
+    },
+    {
+      "type": "table",
+      "id": 9,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "title": "Slow Links — speed below NDR/XDR [LIVE-UFM]",
+      "description": "Active ports negotiated below expected rate. switch = system-name (not the GUID $switch var). Row → D12.",
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Up",
+            "desc": true
+          }
+        ],
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto"
+          },
+          "noValue": "✓ None — fabric healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Up"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "switch"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Blast radius (D12)",
+                    "url": "/d/nvis-ib-blast-radius/blast-radius?var-cluster=$cluster&var-switch=${__data.fields.switch}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "su"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SU"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rack"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rack"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "role"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Role"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "speed"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Speed"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "width"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "system_name": true
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "label_replace(ufm_port_up{cluster=~\"$cluster\",speed=~\"SDR|DDR|QDR|FDR|EDR|HDR\"} == 1, \"system_name\",\"$1\",\"switch\",\"(.*)\") * on(system_name) group_left(su,rack,role) ib_switch_info or label_replace(ufm_port_up{cluster=~\"$cluster\",speed=~\"SDR|DDR|QDR|FDR|EDR|HDR\"} == 1, \"system_name\",\"$1\",\"switch\",\"(.*)\") unless on(system_name) ib_switch_info",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "table",
+      "id": 10,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "title": "Degraded Width — lane down (<4x) [LIVE-UFM]",
+      "description": "Active ports with a dead lane in the cage. Row → D12.",
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Up",
+            "desc": true
+          }
+        ],
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto"
+          },
+          "noValue": "✓ None — fabric healthy"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Up"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "switch"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "🔎 Blast radius (D12)",
+                    "url": "/d/nvis-ib-blast-radius/blast-radius?var-cluster=$cluster&var-switch=${__data.fields.switch}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "su"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SU"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rack"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rack"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "role"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Role"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "speed"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Speed"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "width"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "system_name": true
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "label_replace(ufm_port_up{cluster=~\"$cluster\",width=~\"1x|2x|3x\"} == 1, \"system_name\",\"$1\",\"switch\",\"(.*)\") * on(system_name) group_left(su,rack,role) ib_switch_info or label_replace(ufm_port_up{cluster=~\"$cluster\",width=~\"1x|2x|3x\"} == 1, \"system_name\",\"$1\",\"switch\",\"(.*)\") unless on(system_name) ib_switch_info",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "bargauge",
+      "id": 11,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "title": "Down Ports by Switch — topk(15) [LIVE-UFM]",
+      "description": "Where the CABLED down ports are (speed!=Unknown; never-linked / planned-uncabled spine+leaf uplinks excluded). Click a bar → D12 blast-radius for that switch.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10,
+        "namePlacement": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "short",
+          "links": [
+            {
+              "title": "🔎 Blast radius (D12)",
+              "url": "/d/nvis-ib-blast-radius/blast-radius?var-switch=${__field.labels.switch}&var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ],
+          "noValue": "✓ None — fabric healthy"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "topk(15, count by(switch)(ufm_port_up{cluster=~\"$cluster\",speed!=\"Unknown\"} == 0) > 0)",
+          "legendFormat": "{{switch}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    },
+    {
+      "type": "bargauge",
+      "id": 12,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "title": "Bad-Link Count by SU [LIVE]",
+      "description": "Bad host-links (ib_link_health_score>0.5) per SU via the ib_host_rail_leaf topology join. Where to send techs.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10,
+        "namePlacement": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "✓ None — fabric healthy",
+          "links": [
+            {
+              "title": "🔎 Which links in this SU? → Worst-connections detail",
+              "url": "/d/nvis-ib-offenders?viewPanel=7&var-cluster=$cluster&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "count by(su)((ib_link_health_score{cluster=~\"$cluster\"} > 0.5) * on(node,device) group_left(su) ib_host_rail_leaf)",
+          "legendFormat": "{{su}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      }
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "network",
+    "infiniband",
+    "offenders"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource",
+        "label": "Datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "loki",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource",
+        "label": "Loki"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(node_infiniband_state_id, cluster)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(node_infiniband_state_id, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ""
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "SU",
+        "multi": true,
+        "name": "su",
+        "query": "SU1,SU2,SU3,SU4,SU5,SU6,SU7,SU8,SU9",
+        "options": [],
+        "type": "custom",
+        "allValue": ".+",
+        "description": "Falls back to custom list until ib_switch_info(su) collector lands."
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(ufm_switch_up{cluster=~\"$cluster\"}, switch)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Switch (GUID)",
+        "multi": true,
+        "name": "switch",
+        "options": [],
+        "query": {
+          "query": "label_values(ufm_switch_up{cluster=~\"$cluster\"}, switch)",
+          "refId": "SwitchQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(node_infiniband_info{cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(node_infiniband_info{cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Severity",
+        "multi": true,
+        "name": "severity",
+        "query": "crit,warn,ok",
+        "options": [],
+        "type": "custom",
+        "allValue": ".+"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "InfiniBand — Bad / Slow / Degraded Connections",
+  "uid": "nvis-ib-offenders",
+  "version": 1
+}

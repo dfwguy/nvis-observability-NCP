@@ -1,0 +1,2413 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "L1 triage: one screen to see WHERE a Slurm job broke — outcome banner, per-domain health tiles, and the fabric miscabling money shot (GPUs healthy, leaves miswired).",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "icon": "dashboard",
+      "keepTime": true,
+      "targetBlank": false,
+      "title": "🏠 NVIS Home",
+      "tooltip": "Back to NVIS Home",
+      "type": "link",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Screaming outcome verdict: value-mapped from slurm_job_info state; RUNNING splits into 6=hot / 7=STALLED (avg GPU power<400W = comm-bound).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "text",
+                  "index": 0,
+                  "text": "— SELECT A JOB —"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "✅ SUCCESS"
+                },
+                "2": {
+                  "color": "red",
+                  "index": 2,
+                  "text": "❌ FAILED"
+                },
+                "3": {
+                  "color": "red",
+                  "index": 3,
+                  "text": "❌ NODE FAILURE"
+                },
+                "4": {
+                  "color": "orange",
+                  "index": 4,
+                  "text": "⏱️ TIMED OUT (walltime)"
+                },
+                "5": {
+                  "color": "purple",
+                  "index": 5,
+                  "text": "🛑 FORCE-CLOSED"
+                },
+                "6": {
+                  "color": "blue",
+                  "index": 6,
+                  "text": "🔵 RUNNING"
+                },
+                "7": {
+                  "color": "orange",
+                  "index": 7,
+                  "text": "⚠️ STALLED (comm-bound)"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"COMPLETED\"}) OR vector(0))*1 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"FAILED\"}) OR vector(0))*2 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"NODE_FAIL\"}) OR vector(0))*3 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"TIMEOUT\"}) OR vector(0))*4 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"CANCELLED\"}) OR vector(0))*5 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"RUNNING\"}) OR vector(0))*(6 + ((avg(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"}) < bool 400) OR vector(0)))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 112,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by(node)(cgroup_info{jobid=~\"$jobid\"})) OR vector(0)",
+          "instant": true,
+          "legendFormat": "Nodes",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 113,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(slurm_job_elapsed_seconds{jobid=~\"$jobid\",cluster=~\"$cluster\"})",
+          "instant": true,
+          "legendFormat": "Elapsed",
+          "refId": "A"
+        }
+      ],
+      "title": "Elapsed",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 120,
+      "title": "🩺 Domain Health — WHERE did it break?  (green = fine, red = the failure is here)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "GREEN = GPUs hot (>600W, real compute). RED = <400W with util~100% = spinning in NCCL comm.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 400
+              },
+              {
+                "color": "green",
+                "value": 600
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 9
+      },
+      "id": 130,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ GPU Health",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "instant": true,
+          "legendFormat": "avg power",
+          "refId": "A"
+        }
+      ],
+      "title": "🖥️ GPU Compute (avg power)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Count of GPUs with a GENUINE throttle bit (mask 232) over the run. 0 = clean (XID/ECC checked in Logs row).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 9
+      },
+      "id": 131,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ GPU Health",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max_over_time((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS,232)!=bool 0)[$__range:1m]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"} > 0) OR vector(0)",
+          "instant": true,
+          "legendFormat": "genuine throttles",
+          "refId": "A"
+        }
+      ],
+      "title": "🧬 GPU Errors (throttle)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Miscabling issues (Wrong-neighbor+Extra-cable) on THIS job's leaves. RED (>0) = the root cause is the fabric wiring.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 9
+      },
+      "id": 132,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ Cable-Issue Worklist",
+          "url": "/d/nvis-ib-cabling/ib-cabling?var-cluster=$cluster&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ib_cable_issue{issue=~\"Wrong-neighbor|Extra-cable\"} * on(node) group_left() (label_replace(count by(leaf)(ib_host_rail_leaf * on(node) group_left() (count by(node)(cgroup_info{jobid=~\"$jobid\"}))), \"node\", \"$1\", \"leaf\", \"(.*)\"))) OR vector(0)",
+          "instant": true,
+          "legendFormat": "miscabling issues",
+          "refId": "A"
+        }
+      ],
+      "title": "🔴 Network / Fabric",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "NFS RPC retransmission rate across job nodes. ~0 = storage is not stalling I/O.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 9
+      },
+      "id": 133,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ Storage Offenders",
+          "url": "/d/nvis-storage-offenders/storage-offenders?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_nfs_rpc_retransmissions_total[$__rate_interval]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"}) OR vector(0)",
+          "instant": true,
+          "legendFormat": "retrans/s",
+          "refId": "A"
+        }
+      ],
+      "title": "💾 Storage / NFS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Final Slurm outcome (same mapping as banner).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "text",
+                  "index": 0,
+                  "text": "— SELECT A JOB —"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "✅ SUCCESS"
+                },
+                "2": {
+                  "color": "red",
+                  "index": 2,
+                  "text": "❌ FAILED"
+                },
+                "3": {
+                  "color": "red",
+                  "index": 3,
+                  "text": "❌ NODE FAILURE"
+                },
+                "4": {
+                  "color": "orange",
+                  "index": 4,
+                  "text": "⏱️ TIMED OUT (walltime)"
+                },
+                "5": {
+                  "color": "purple",
+                  "index": 5,
+                  "text": "🛑 FORCE-CLOSED"
+                },
+                "6": {
+                  "color": "blue",
+                  "index": 6,
+                  "text": "🔵 RUNNING"
+                },
+                "7": {
+                  "color": "orange",
+                  "index": 7,
+                  "text": "⚠️ STALLED (comm-bound)"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 9
+      },
+      "id": 134,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ Job Logs (Slurm)",
+          "url": "/d/nvis-job-logs/job-logs?var-jobid=$jobid&var-cluster=$cluster&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "(count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"COMPLETED\"}) OR vector(0))*1 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"FAILED\"}) OR vector(0))*2 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"NODE_FAIL\"}) OR vector(0))*3 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"TIMEOUT\"}) OR vector(0))*4 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"CANCELLED\"}) OR vector(0))*5 + (count(slurm_job_info{jobid=~\"$jobid\",cluster=~\"$cluster\",state=\"RUNNING\"}) OR vector(0))*(6 + ((avg(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"}) < bool 400) OR vector(0)))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "⚙️ Slurm State",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Sum of cgroup memory fail_count (OOM) across job nodes. 0 = no OOM.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 9
+      },
+      "id": 135,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ Job Logs (OOM)",
+          "url": "/d/nvis-job-logs/job-logs?var-jobid=$jobid&var-node=$node&var-cluster=$cluster&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(cgroup_memory_fail_count * on(instance) group_left cgroup_info{jobid=~\"$jobid\"}) OR vector(0)",
+          "instant": true,
+          "legendFormat": "OOM kills",
+          "refId": "A"
+        }
+      ],
+      "title": "🧠 Memory (OOM kills)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 140,
+      "title": "💥 Fabric Root Cause — GPUs Healthy ✓  vs  Leaves Miswired ✗",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "DCGM proved GPUs healthy: SM clock pinned ~2063MHz, 0 genuine throttle, 0 XID/ECC/NVLink.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "0 ✓  HEALTHY\n(0 throttle / 0 XID / 0 ECC)"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 14
+      },
+      "id": 150,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ GPU Health",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max_over_time((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS,232)!=bool 0)[$__range:1m]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"} > 0) OR vector(0)",
+          "instant": true,
+          "legendFormat": "genuine throttles",
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs Healthy ✓",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Total miscabling issues on the job's leaves (dominated by leaf-switch).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 14
+      },
+      "id": 151,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ Cable-Issue Worklist",
+          "url": "/d/nvis-ib-cabling/ib-cabling?var-cluster=$cluster&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(ib_cable_issue{issue=~\"Wrong-neighbor|Extra-cable\"} * on(node) group_left() (label_replace(count by(leaf)(ib_host_rail_leaf * on(node) group_left() (count by(node)(cgroup_info{jobid=~\"$jobid\"}))), \"node\", \"$1\", \"leaf\", \"(.*)\"))) OR vector(0)",
+          "instant": true,
+          "legendFormat": "issues on job leaves",
+          "refId": "A"
+        }
+      ],
+      "title": "Fabric Miswired ✗",
+      "type": "stat"
+    },
+    {
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 14
+      },
+      "id": 152,
+      "options": {
+        "content": "<div style=\"padding:10px 14px;font-size:13px;line-height:1.5;color:#e8e8e8;\"><b style=\"color:#ff6b6b;\">Why a healthy GPU job still crawls &amp; times out:</b><br/>The leaf switch has <b>healthy links plugged into the WRONG ports</b> (Wrong-neighbor) plus extra cables. Physically the links are UP and error-free (so <i>host</i> node_infiniband_* counters read 0), but the fabric’s <b>routing &amp; SHARP trees are corrupted</b>. Collective (NCCL) traffic takes wrong paths &rarr; erratic 5&times; slowdown with <b>no straggler and no link errors</b>. GPUs pin at ~100% util but only ~350W — <b>spinning in comm, not computing</b>. The offender <b style=\"color:#ff6b6b;\">leaf-switch</b> homes this job’s nodes.</div>",
+        "mode": "html"
+      },
+      "title": "💡 The Mechanism",
+      "transparent": false,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "decimals": 0,
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "→ Cable-Issue Worklist",
+              "url": "/d/nvis-ib-cabling/ib-cabling?var-cluster=$cluster&var-su=${__data.fields.su}&${__url_time_range}"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TOTAL"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Wrong-Neighbor"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 8
+                    },
+                    {
+                      "color": "red",
+                      "value": 20
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Leaf Switch"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 153,
+      "links": [],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": [
+            "TOTAL",
+            "Wrong-Neighbor",
+            "Extra-Cable"
+          ],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "TOTAL"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by(node,su)(ib_cable_issue{issue=~\"Wrong-neighbor|Extra-cable\"} * on(node) group_left() (label_replace(count by(leaf)(ib_host_rail_leaf * on(node) group_left() (count by(node)(cgroup_info{jobid=~\"$jobid\"}))), \"node\", \"$1\", \"leaf\", \"(.*)\")))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by(node)(ib_cable_issue{issue=\"Wrong-neighbor\"} * on(node) group_left() (label_replace(count by(leaf)(ib_host_rail_leaf * on(node) group_left() (count by(node)(cgroup_info{jobid=~\"$jobid\"}))), \"node\", \"$1\", \"leaf\", \"(.*)\")))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by(node)(ib_cable_issue{issue=\"Extra-cable\"} * on(node) group_left() (label_replace(count by(leaf)(ib_host_rail_leaf * on(node) group_left() (count by(node)(cgroup_info{jobid=~\"$jobid\"}))), \"node\", \"$1\", \"leaf\", \"(.*)\")))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by(node)((label_replace(count by(leaf)(ib_host_rail_leaf * on(node) group_left() (count by(node)(cgroup_info{jobid=~\"$jobid\"}))), \"node\", \"$1\", \"leaf\", \"(.*)\")))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "D"
+        }
+      ],
+      "title": "🖧️ Miscabling per Job Leaf — sorted worst-first (leaf-switch screams)",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Value #A": 5,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 2,
+              "node": 0,
+              "su": 1
+            },
+            "renameByName": {
+              "Value #A": "TOTAL",
+              "Value #B": "Wrong-Neighbor",
+              "Value #C": "Extra-Cable",
+              "Value #D": "#Job Host-Rails",
+              "node": "Leaf Switch",
+              "su": "SU / Role"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 160,
+      "title": "📈 GPU Signature — Comm-Bound Stall (util ~100%, power/clock idle)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg GPU Util (%)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg GPU Power (W)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "id": 170,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "GPU Health (L2)",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Avg GPU Power (W)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Avg GPU Util (%)",
+          "refId": "B"
+        }
+      ],
+      "title": "GPU Power vs Utilization — job avg",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "MHz",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg MemCopy Util (%)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg SM Clock (MHz)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "id": 171,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "GPU Health (L2)",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_SM_CLOCK * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Avg SM Clock (MHz)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEM_COPY_UTIL * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Avg MemCopy Util (%)",
+          "refId": "B"
+        }
+      ],
+      "title": "GPU SM Clock & MemCopy — job avg (clock pinned high, memcopy ~5% = spinning)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 172,
+      "panels": [],
+      "title": "🌡️ GPU Thermals & Power",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 65
+              },
+              {
+                "color": "red",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg GPU Util (%)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg GPU Power (W)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 173,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "GPU Health (L2)",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_TEMP * on(instance) group_left cgroup_info{jobid=~\"$jobid\"} < 150)",
+          "legendFormat": "Avg GPU chip °C",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP * on(instance) group_left cgroup_info{jobid=~\"$jobid\"} < 150)",
+          "legendFormat": "Max GPU chip °C",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_MEMORY_TEMP * on(instance) group_left cgroup_info{jobid=~\"$jobid\"} < 150)",
+          "legendFormat": "Avg HBM °C",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_MEMORY_TEMP * on(instance) group_left cgroup_info{jobid=~\"$jobid\"} < 150)",
+          "legendFormat": "Max HBM °C",
+          "refId": "D"
+        }
+      ],
+      "title": "🌡️ GPU Temperature — job (chip + HBM)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 600
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg GPU Util (%)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg GPU Power (W)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 174,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "GPU Health (L2)",
+          "url": "/d/gpu-health/gpu-health?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Avg Power W",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Max Power W",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "min(DCGM_FI_DEV_POWER_USAGE * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Min Power W",
+          "refId": "C"
+        }
+      ],
+      "title": "⚡ GPU Power — job (avg / max, 600W = real training)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 180,
+      "title": "🔌 Host Fabric & Storage — Endpoints Clean (flat 0 = not the NICs)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "→ IB Signal Offenders",
+              "url": "/d/nvis-ib-signal/ib-signal?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "id": 190,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_infiniband_link_downed_total[$__rate_interval]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Link Downed/s",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_infiniband_symbol_error_total[$__rate_interval]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Symbol Errors/s",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_infiniband_port_errors_received_total[$__rate_interval]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "Port Errors Recv/s",
+          "refId": "C"
+        }
+      ],
+      "title": "Host InfiniBand Errors — job nodes (should be flat 0)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "→ Storage Offenders",
+              "url": "/d/nvis-storage-offenders/storage-offenders?var-cluster=$cluster&var-node=$node&${__url_time_range}"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 49
+      },
+      "id": 191,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(node_nfs_rpc_retransmissions_total[$__rate_interval]) * on(instance) group_left cgroup_info{jobid=~\"$jobid\"})",
+          "legendFormat": "NFS Retrans/s",
+          "refId": "A"
+        }
+      ],
+      "title": "NFS Retransmissions — job nodes",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "id": 200,
+      "title": "📜 Logs — XID / Errors  (deep-dive in Job Logs L2)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "XID log lines across the cluster kern.log/syslog in range. Cross-check benign XIDs (13/31/32/43/45) in the Logs L2.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 58
+      },
+      "id": 210,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "→ XID by code & node",
+          "url": "/d/nvis-xid-errors/xid-errors?var-cluster=${cluster:percentencode}&var-node=${node:percentencode}&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "count(sum by (node, gpu, pci, xid) (count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} |~ \"(?i)xid\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" | regexp \"(?i)xid *(?:[(]pci:[0-9a-f:]+[)] *:)? *(?P<xid>[0-9]+)\" | regexp \"(?i)for gpu (?P<gpu>[0-9]+)\" | regexp \"(?i)pci:(?P<pci>[0-9a-f:]+)\" [$__range])))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "🔴 XID Incidents (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "Error/fail/nvlink log lines on the job's nodes in range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 58
+      },
+      "id": 211,
+      "links": [
+        {
+          "targetBlank": false,
+          "title": "Job Logs (L2)",
+          "url": "/d/nvis-job-logs/job-logs?var-jobid=${jobid}&${__url_time_range}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", filename=~\"/var/log/(kern.log|syslog)\", node=~\"$node\"} !~ \"dcgm-exporter\" |~ \"(?i)(NVRM|knvlink|nvidia-nvlink|ncclRemoteError|nccl|nvlink|GPU has fallen off|hung_task|watchdog: BUG|soft lockup|call trace|timed out|timeout)\" !~ \"Xid [(][^)]*[)]: (13|31|32|43|45)[,:]\" [$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "⚠️ Error Log Lines (range)",
+      "type": "stat"
+    },
+    {
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 212,
+      "options": {
+        "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><a href=\"/d/nvis-job-logs/job-logs?var-jobid=${jobid}&var-cluster=${cluster}&${__url_time_range}\" style=\"display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#00d4ff;border:1px solid #00d4ff;border-radius:8px;text-decoration:none;font-size:18px;font-weight:700;letter-spacing:0.5px;box-shadow:0 0 10px rgba(0,212,255,0.35);\">📜  Open Job Logs (L2) &rarr;</a></div>",
+        "mode": "html"
+      },
+      "title": "",
+      "transparent": false,
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "nvis",
+    "job",
+    "jobstats",
+    "slurm",
+    "gpu",
+    "fabric",
+    "cluster"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "nvis-loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "DGX Flavor",
+        "multi": false,
+        "name": "dgx_flavor",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "query": "DGX SuperPOD",
+        "type": "custom",
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(slurm_job_info{cluster=~\"$cluster\"}, jobid)",
+        "description": "Select a Slurm Job ID. The Node selector below auto-scopes to this job's nodes (cgroup_exporter), which scopes every GPU/mem panel.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job ID",
+        "multi": false,
+        "name": "jobid",
+        "options": [],
+        "query": {
+          "query": "label_values(slurm_job_info{cluster=~\"$cluster\"}, jobid)",
+          "refId": "JobIDQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 3,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(slurm_job_node{jobid=~\"$jobid\", cluster=~\"$cluster\"}, node)",
+        "description": "Nodes running the selected job (cgroup_exporter). Defaults to All of the job's nodes.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(slurm_job_node{jobid=~\"$jobid\", cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "🚦 Job Health — Where Did It Break (L1)",
+  "uid": "nvis-job-health",
+  "version": 6,
+  "weekStart": ""
+}

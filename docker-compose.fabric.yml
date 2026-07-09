@@ -1,0 +1,205 @@
+# NVIS Observability — InfiniBand fabric exporters (compose fragment)
+# ====================================================================
+# Merge with the base stack:
+#   docker compose -f docker-compose.yml -f docker-compose.fabric.yml up -d
+#
+# Every service mirrors the bcm-exporter pattern: a stock python:3.11-slim image
+# with the exporter script mounted from ./exporters/<name>, host networking, and
+# ALL site values supplied via the .env the installer writes (see
+# .env.fabric.example). No credentials or IPs are baked into this file.
+#
+# Ports:  ufm 9103 · ufm-telemetry 9105 · ib-lldp 9114 · ib-cable-issue 9116
+#         ib-switch-audit 9117 · ib-identity 9118   (cable-audit is a scanner,
+#         no port — it writes CSVs that ib-cable-issue serves).
+
+services:
+  # ── UFM REST exporter — fabric/switch/port/link/alarm metrics (ufm_*) ──────
+  ufm-exporter:
+    image: python:3.11-slim
+    container_name: nvis-ufm-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - UFM_HOST=${UFM_HOST:-}
+      - UFM_USER=${UFM_USER:-ufmsystem}
+      - UFM_PASSWORD=${UFM_PASSWORD:-}
+      - UFM_CLUSTER_MINDER=${UFM_CLUSTER_MINDER:-false}
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      - VERIFY_SSL=${UFM_VERIFY_SSL:-false}
+      - PORT=9103
+      - SCRAPE_INTERVAL=${UFM_SCRAPE_INTERVAL:-30}
+    volumes:
+      - ./exporters/ufm:/app:ro
+    command: ["python3", "/app/ufm_exporter.py"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9103/-/healthy')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── UFM Telemetry exporter — per-switch-port PHY counters/BER/FEC (9001) ───
+  ufm-telemetry-exporter:
+    image: python:3.11-slim
+    container_name: nvis-ufm-telemetry-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - UFM_HOST=${UFM_HOST:-}
+      - UFM_TELEMETRY_PORT=${UFM_TELEMETRY_PORT:-9001}
+      # Optional full-URL override; default is http://$UFM_HOST:$UFM_TELEMETRY_PORT/csv/metrics
+      - UFM_CSV_URL=${UFM_TELEMETRY_URL:-}
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      - POLL_INTERVAL=${UFM_TELEMETRY_POLL:-90}
+      - SU_HOST_FILTER=${UFM_TELEMETRY_HOST_FILTER:-}
+      - PORT=9105
+    volumes:
+      - ./exporters/ufm-telemetry:/app:ro
+    command: ["python3", "/app/ufm_telemetry_exporter.py"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9105/-/healthy')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── IB LLDP / SM-redundancy exporter (ibl_*) — UFM REST + switch SSH sweep ─
+  ib-lldp-exporter:
+    image: python:3.11-slim
+    container_name: nvis-ib-lldp-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - UFM_HOST=${UFM_HOST:-}
+      - UFM_USER=${UFM_USER:-ufmsystem}
+      - UFM_PASSWORD=${UFM_PASSWORD:-}
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      # Switch SSH for the transceiver/reachability sweep
+      - SWITCH_SSH_USER=${SWITCH_SSH_USER:-}
+      - SWITCH_SSH_PASSWORD=${SWITCH_SSH_PASSWORD:-}
+      # Optional explicit "name=ip,name=ip" list; empty => auto-discover from UFM
+      - SWITCH_LIST=${SWITCH_LIST:-}
+      - SWEEP_ENABLED=${IB_LLDP_SWEEP_ENABLED:-1}
+      - SWEEP_INTERVAL=${IB_LLDP_SWEEP_INTERVAL:-1800}
+      - PORT=9114
+    volumes:
+      - ./exporters/ib-lldp:/app:ro
+    command:
+      - bash
+      - -c
+      - |
+        pip install --no-cache-dir --quiet --target /tmp/pylib paramiko 2>/dev/null || true
+        export PYTHONPATH=/tmp/pylib
+        exec python3 /app/ib_lldp_exporter.py
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9114/-/healthy')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── IB cable audit SCANNER — discovers live cabling, diffs vs expected map ─
+  # Writes cable-issue_*.csv into the shared /data volume on CABLE_AUDIT_INTERVAL;
+  # ib-cable-issue-exporter serves those CSVs. Default SCAN_MODE=ufm (SM link
+  # view, no switch SSH). Set CABLE_SCAN_MODE=ssh for the air-gapped SSH path.
+  ib-cable-audit:
+    image: python:3.11-slim
+    container_name: nvis-ib-cable-audit
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - SCAN_MODE=${CABLE_SCAN_MODE:-ufm}
+      - UFM_HOST=${UFM_HOST:-}
+      - UFM_USER=${UFM_USER:-ufmsystem}
+      - UFM_PASSWORD=${UFM_PASSWORD:-}
+      - UFM_VERIFY_SSL=${UFM_VERIFY_SSL_NUM:-0}
+      - SWITCH_SSH_USER=${SWITCH_SSH_USER:-}
+      - SWITCH_SSH_PASSWORD=${SWITCH_SSH_PASSWORD:-}
+      - FABRIC=${FABRIC:-fabric}
+      - OUTPUT_DIR=/data
+      - EXPECTED_TOPOLOGY=/data/expected-topology.json
+      - SWITCH_MAP_JSON=/data/switch_su_map.json
+      - INVENTORY_CSV=/data/ufm_switches_new.csv
+    volumes:
+      - ./exporters/cable-audit:/app:ro
+      - ./exporters/cable-audit/data:/data
+    command:
+      - bash
+      - -c
+      - |
+        pip install --no-cache-dir --quiet paramiko 2>/dev/null || true
+        while true; do
+          python3 /app/cable_audit_scan.py || echo "cable_audit_scan exited non-zero (kept last-good snapshot)";
+          sleep ${CABLE_AUDIT_INTERVAL:-43200};
+        done
+
+  # ── IB cable-issue exporter (ib_cable_*) — serves the scanner's CSVs ───────
+  ib-cable-issue-exporter:
+    image: python:3.11-slim
+    container_name: nvis-ib-cable-issue-exporter
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - ib-cable-audit
+    environment:
+      - CABLE_PORT=9116
+      - CABLE_WATCH_DIR=/data
+      - SWITCH_MAP_JSON=/data/switch_su_map.json
+      - FABRIC=${FABRIC:-fabric}
+      - REFRESH_INTERVAL=${CABLE_ISSUE_REFRESH:-60}
+      - LOKI_URL=${CABLE_ISSUE_LOKI_URL:-}
+    volumes:
+      - ./exporters/ib-cable-issue:/app:ro
+      - ./exporters/cable-audit/data:/data:ro
+    command:
+      - bash
+      - -c
+      - |
+        pip install --no-cache-dir --quiet prometheus-client 2>/dev/null || true
+        exec python3 /app/ib_cable_issue_exporter.py
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9116/metrics')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── IB switch audit / firmware exporter (ib_switch_audit_*) — CSV reader ───
+  ib-switch-audit-exporter:
+    image: python:3.11-slim
+    container_name: nvis-ib-switch-audit-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT=9117
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      - UFM_CSV=/data/ufm_switches_new.csv
+      - AUDIT_GLOB=/data/nvos_all_switches_audit_*.csv
+      - REFRESH_INTERVAL=${SWITCH_AUDIT_REFRESH:-60}
+    volumes:
+      - ./exporters/ib-switch-audit:/app:ro
+      - ./exporters/ib-switch-audit/data:/data:ro
+    command: ["python3", "/app/ib_switch_audit_exporter.py"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9117/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── IB identity / topology join bridge (ib_switch_info, ib_link_peer, ...) ─
+  ib-identity-exporter:
+    image: python:3.11-slim
+    container_name: nvis-ib-identity-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT=9118
+      - CLUSTER_NAME=${CLUSTER_NAME:-cluster}
+      - FABRIC=${FABRIC:-fabric}
+      - HOST_NAME_PREFIX=${HOST_NAME_PREFIX:-gpu}
+      - IB_IDENTITY_DATA=/app/data
+      - REFRESH_SECONDS=${IB_IDENTITY_REFRESH:-3600}
+    volumes:
+      - ./exporters/ib-identity:/app:ro
+    command: ["python3", "/app/ib_identity_exporter.py"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9118/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

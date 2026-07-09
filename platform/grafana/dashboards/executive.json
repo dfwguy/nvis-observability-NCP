@@ -1,0 +1,1822 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "GPU allocation · Cluster availability · Fleet health · Power/thermal · Offender drilldowns (DGX SuperPOD, fleet-scale)",
+  "id": null,
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9900,
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"display:flex;align-items:center;height:100%;\"><a href=\"/d/nvis-demo-home\" style=\"display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#00d4ff;border:1px solid #00d4ff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.5px;box-shadow:0 0 8px rgba(0,212,255,0.3);transition:all 0.2s;\" onmouseover=\"this.style.boxShadow='0 0 16px rgba(0,212,255,0.6)'\" onmouseout=\"this.style.boxShadow='0 0 8px rgba(0,212,255,0.3)'\">&#127968; NVIS Home</a></div>",
+        "justifyContent": "center",
+        "alignItems": "center"
+      },
+      "transparent": true
+    },
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 21,
+        "x": 3,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "<div style=\"padding:10px 16px;background:linear-gradient(135deg,#060d14,#0d1828);border-radius:8px;border:1px solid #76b90030;display:flex;justify-content:space-between;align-items:center\">\n<div>\n <div style=\"color:#76b900;font-size:18px;font-weight:700;letter-spacing:1px\">⚡ NVIDIA NVIS — Executive Intelligence Dashboard</div>\n <div style=\"color:#8b949e;font-size:11px;margin-top:3px\">DGX SuperPOD GPU Cluster · up to fleet-scale · 4× NVIDIA DGX SuperPOD per node (thousands of GPUs)</div>\n</div>\n<div style=\"text-align:right;font-family:monospace;font-size:10px;color:#8b949e\">\n <div style=\"color:#76b900;font-size:12px\">🟢 CLUSTER OPERATIONAL</div>\n <div>Updated: live · 1m refresh</div>\n</div>\n</div>",
+        "mode": "html"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "title": "📊 Key Performance Indicators",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(up{job=\"node-exporter\",cluster=~\"$cluster\"} == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes Reporting",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 40
+              },
+              {
+                "color": "yellow",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Utilization (avg)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "100 * sum(DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\"}) / sum(DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\"} + DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Memory Used (avg)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} > 5)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs Active (>5% util)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "unit": "h",
+          "decimals": 0
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 4
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "avg_over_time(count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"})[24h:5m]) * 24",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU-Hours Powered (24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          },
+          "unit": "watt",
+          "decimals": 1
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 4
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total GPU Power Draw",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "celsius"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 4
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Max GPU Temp",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "There is no DCGM XID metric. XID events are parsed from kernel logs (Loki).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 25
+              }
+            ]
+          },
+          "unit": "none",
+          "decimals": 0
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 4
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "sum(count_over_time({cluster=\"cluster\"} |~ \"(?i)xid\" [24h]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "XID Log Events (24h)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 11,
+      "title": "🖥️ GPU Allocation & Utilization",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Top 15 busiest GPUs only — the full fleet is ~2300 series and unreadable as all-lines.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 14,
+        "x": 0,
+        "y": 9
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}} · GPU{{gpu}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 15 Busiest GPUs — Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 14,
+        "y": 9
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} <= 5)",
+          "legendFormat": "Idle (≤5%)",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} > 5 <= 60)",
+          "legendFormat": "Moderate (5–60%)",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"} > 60)",
+          "legendFormat": "Heavy (>60%)",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "GPU Utilization Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Top 15 nodes by mean GPU utilization (per-node average across its 4 GPUs).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 19,
+        "y": 9
+      },
+      "id": 14,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, avg by (node) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"}))",
+          "legendFormat": "{{node}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Top 15 Nodes by GPU Utilization",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 15,
+      "title": "🟢 SLA — Cluster & Fabric Availability",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 19
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "100 * avg_over_time(ufm_up{cluster=~\"$cluster\"}[30d])",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "UFM Uptime (30d)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 19
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "100 * count(up{job=\"node-exporter\",cluster=~\"$cluster\"} == 1) / count(up{job=\"node-exporter\",cluster=~\"$cluster\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Node Availability (now)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Nodes whose node-exporter is failing to scrape (up==0). Empty table = all nodes healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 19
+      },
+      "id": 18,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "node",
+            "desc": false
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "up{job=\"node-exporter\",cluster=~\"$cluster\",node=~\"$node\"} == 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true
+            },
+            "renameByName": {
+              "node": "Node",
+              "instance": "Instance"
+            },
+            "indexByName": {
+              "node": 0,
+              "instance": 1
+            }
+          }
+        }
+      ],
+      "title": "🔴 Down Nodes (node-exporter up==0)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 23
+      },
+      "id": 30,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(up{job=\"node-exporter\",cluster=~\"$cluster\"} == 0) or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes Down",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPUs with an active HW/SW throttle bit (mask 252: excludes GPU-Idle=1 and App-Clocks=2).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 23
+      },
+      "id": 31,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "count(bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\"}, 232) > 0) or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPUs Throttling (now)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 19,
+      "title": "⚡ Power, Thermals & Health Offenders (MEP)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Top 15 GPUs by power — outliers/spikes only, not the whole fleet.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "watt"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}} · GPU{{gpu}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 15 GPUs by Power Draw (W)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Top 15 hottest GPU chips — outliers only. Companion table below lists current values.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "unit": "celsius"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(15, DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{node}} · GPU{{gpu}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 15 Hottest GPU Chips (°C)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Current highest-power GPUs.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 700
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 0,
+        "y": 36
+      },
+      "id": 44,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Power (W)",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\",node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "device": true,
+              "instance": true,
+              "UUID": true,
+              "pci_bus_id": true,
+              "modelName": true
+            },
+            "renameByName": {
+              "node": "Node",
+              "gpu": "GPU",
+              "Value": "Power (W)"
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "Value": 2
+            }
+          }
+        }
+      ],
+      "title": "🔌 Highest-Power GPUs",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "Current hottest GPU chips.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "unit": "celsius",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 87
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 6,
+        "y": 36
+      },
+      "id": 43,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Temp (°C)",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "topk(20, DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\",node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "device": true,
+              "instance": true,
+              "UUID": true,
+              "pci_bus_id": true,
+              "modelName": true
+            },
+            "renameByName": {
+              "node": "Node",
+              "gpu": "GPU",
+              "Value": "Temp (°C)"
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "Value": 2
+            }
+          }
+        }
+      ],
+      "title": "🌡️ Hottest GPUs",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPUs actively throttling, with the reason decoded in words. Mask excludes GPU-Idle(1) and App-Clocks(2). Empty = no throttling.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 12,
+        "y": 36
+      },
+      "id": 40,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Reason",
+            "desc": false
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\",node=~\"$node\"}, 64) == 64) / 64, \"reason\", \"HW Thermal Slowdown\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\",node=~\"$node\"}, 128) == 128) / 128, \"reason\", \"HW Power Brake\")",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\",node=~\"$node\"}, 32) == 32) / 32, \"reason\", \"SW Thermal Slowdown\")",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\",node=~\"$node\"}, 8) == 8) / 8, \"reason\", \"HW Slowdown\")",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "(label_set((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\",node=~\"$node\"}, 4) == 4) / 4, \"reason\", \"SW Power Cap (impacting)\")) and on(node, gpu) (rate(DCGM_FI_DEV_POWER_VIOLATION{cluster=~\"$cluster\",node=~\"$node\"}[5m]) > 0) and on(node, gpu) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",node=~\"$node\"} > 50)",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set((bitmap_and(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS{cluster=~\"$cluster\",node=~\"$node\"}, 16) == 16) / 16, \"reason\", \"Sync Boost\")",
+          "format": "table",
+          "instant": true,
+          "refId": "F"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "device": true,
+              "instance": true,
+              "UUID": true,
+              "pci_bus_id": true,
+              "modelName": true,
+              "Value": true
+            },
+            "renameByName": {
+              "node": "Node",
+              "gpu": "GPU",
+              "reason": "Reason"
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "reason": 2
+            }
+          }
+        }
+      ],
+      "title": "🔥 Active Throttle Reasons (decoded)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nvis-victoriametrics"
+      },
+      "description": "GPUs with critical hardware errors (any value > 0). Empty = healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 18,
+        "y": 36
+      },
+      "id": 41,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Count",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set(DCGM_FI_DEV_ECC_DBE_AGG_TOTAL{cluster=~\"$cluster\",node=~\"$node\"} > 0, \"error\", \"ECC Double-Bit (agg)\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set(DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS{cluster=~\"$cluster\",node=~\"$node\"} > 0, \"error\", \"Uncorrectable Remapped Rows\")",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set(DCGM_FI_DEV_ROW_REMAP_FAILURE{cluster=~\"$cluster\",node=~\"$node\"} > 0, \"error\", \"Row Remap Failure\")",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nvis-victoriametrics"
+          },
+          "expr": "label_set(DCGM_FI_DEV_PCIE_REPLAY_COUNTER{cluster=~\"$cluster\",node=~\"$node\"} > 0, \"error\", \"PCIe Replays\")",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "replica": true,
+              "cluster": true,
+              "dgx_flavor": true,
+              "Hostname": true,
+              "device": true,
+              "instance": true,
+              "UUID": true,
+              "pci_bus_id": true,
+              "modelName": true
+            },
+            "renameByName": {
+              "node": "Node",
+              "gpu": "GPU",
+              "error": "Error",
+              "Value": "Count"
+            },
+            "indexByName": {
+              "node": 0,
+              "gpu": 1,
+              "error": 2,
+              "Value": 3
+            }
+          }
+        }
+      ],
+      "title": "❌ Critical GPU Hardware Errors",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "nvis-loki"
+      },
+      "description": "XID error events parsed from kernel logs, aggregated per node over the dashboard time range. There is no DCGM XID metric; this comes from Loki.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
+      "id": 42,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "XID Log Lines",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nvis-loki"
+          },
+          "expr": "sum by (node) (count_over_time({cluster=\"cluster\"} |~ \"(?i)xid\" [$__range]))",
+          "queryType": "instant",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "node": "Node",
+              "Value": "XID Log Lines"
+            },
+            "indexByName": {
+              "node": 0,
+              "Value": 1
+            }
+          }
+        }
+      ],
+      "title": "🧠 XID Error Events by Node (Loki, range)",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [
+    "nvis",
+    "executive",
+    "roi"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "VictoriaMetrics",
+          "value": "nvis-victoriametrics"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "nvis-loki",
+          "value": "nvis-loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(up, cluster)",
+          "refId": "ClusterQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nvis-victoriametrics"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\"}, node)",
+          "refId": "NodeQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".+"
+      },
+      {
+        "name": "dgx_flavor",
+        "label": "DGX Flavor",
+        "type": "custom",
+        "query": "DGX SuperPOD",
+        "options": [
+          {
+            "selected": true,
+            "text": "DGX SuperPOD",
+            "value": "DGX SuperPOD"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "DGX SuperPOD",
+          "value": "DGX SuperPOD"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "datasource": null,
+        "allValue": null,
+        "regex": "",
+        "description": "Display label for the DGX platform. The installer sets this from the DGX_FLAVOR env var."
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Executive Overview — Cluster ROI, Allocation & Health",
+  "uid": "nvis-executive",
+  "version": 4,
+  "links": [
+    {
+      "type": "link",
+      "title": "🏠 NVIS Home",
+      "url": "/d/nvis-demo-home/nvis-home?${__url_time_range}",
+      "icon": "dashboard",
+      "tooltip": "Back to NVIS Home",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ]
+}

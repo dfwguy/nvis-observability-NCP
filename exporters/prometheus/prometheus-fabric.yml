@@ -1,0 +1,53 @@
+# NVIS Observability — InfiniBand fabric scrape jobs (Prometheus fragment)
+# ========================================================================
+# Merge these jobs into prometheus/prometheus.yml (append under scrape_configs).
+# The fabric exporters run with network_mode: host, so from inside the
+# Prometheus container they are reached via the Docker host-gateway address.
+# 172.17.0.1 is the default docker0 bridge gateway; on some hosts use
+# host.docker.internal (add `extra_hosts: ["host.docker.internal:host-gateway"]`
+# to the prometheus service) or the host's real IP.
+
+scrape_configs:
+  # UFM REST fabric metrics (ufm_*)
+  - job_name: ufm-exporter
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    honor_labels: true
+    static_configs:
+      - targets: ["172.17.0.1:9103"]
+
+  # UFM Telemetry per-port PHY/BER/FEC counters
+  - job_name: ufm-telemetry-exporter
+    scrape_interval: 90s
+    scrape_timeout: 60s
+    honor_labels: true
+    static_configs:
+      - targets: ["172.17.0.1:9105"]
+
+  # IB LLDP / SM-redundancy (ibl_*)
+  - job_name: ib-lldp-exporter
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+      - targets: ["172.17.0.1:9114"]
+
+  # IB cable-issue / miswiring (ib_cable_*)
+  - job_name: ib-cable-issue-exporter
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+      - targets: ["172.17.0.1:9116"]
+
+  # IB switch audit / firmware (ib_switch_audit_*)
+  - job_name: ib-switch-audit-exporter
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+      - targets: ["172.17.0.1:9117"]
+
+  # IB identity / topology join bridge (ib_switch_info, ib_link_peer, ...)
+  - job_name: ib-identity-exporter
+    scrape_interval: 5m
+    honor_labels: true
+    static_configs:
+      - targets: ["172.17.0.1:9118"]
